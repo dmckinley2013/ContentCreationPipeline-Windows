@@ -1,5 +1,4 @@
-# Metadata Module
-
+# Content Creation Pipeline
 ## Setting up the environment
 
 1. **Create a virtual environment** (in the main project directory):
@@ -29,6 +28,11 @@ Ensure **Docker Desktop** is running if you are on Windows.
 1. **Start the Docker containers**:
    ```bash
    docker-compose up --build -d
+   ```
+## Run the UI
+1. **Run the dashboard_receiver.py file inside of the Consumer Demo**
+   ```bash
+   python dashboard_receiver.py
    ```
 
 ## Running the Python Scripts
