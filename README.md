@@ -30,7 +30,7 @@ Ensure **Docker Desktop** is running if you are on Windows.
    docker-compose up --build -d
    ```
 ## Run the UI
-1. **Run the dashboard_receiver.py file inside of the Consumer Demo**
+1. **Navigate to the directory where 'dashboard_receiver.py' is located and run:**
    ```bash
    python dashboard_receiver.py
    ```
