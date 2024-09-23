@@ -1,0 +1,79 @@
+I can
+understand how this image could be closer to lighthouse as some of the rocks could have a
+similar hue as the initial lighthouse picture, but for the butterfly I can not understand why the
+model is saying it is 40% similar.Ryan Smith
+CAP 4630
+Dr. Marques
+Project 4
+Selected tool URL:After learning
+more about these advanced options I have increased my epochs to 1000 and kept both batch size
+and learning rate on their defaults.
+Image comparison:
+When I uploaded a different image of a butterfly, we can observe that the computer is able to
+distinguish that the image is more of a butterfly than a lighthouse, but not by a huge margin.Furthermore, each of the classes
+allow for more than one image to be input, I assume adding additional images into the class will
+help train the model further and improve accuracy when comparing images.I can upload an image into each of the
+classes with class one being a picture of a butterfly and class two being a picture of a lighthouse.
+For instance, if I
+added my second butterfly picture to the butterfly class, I wonder if the computer would be able
+to more accurately differentiate between a third butterfly and the lighthouse.Gathering the classes:
+Teachable Machine allows the user to capture images via webcam or upload images downloaded
+on the local device and store then into two separate classes.The following image displays a better percentage (57%), which is a decent result as this is
+close to 3/5th but not by any means definite and that our model can be trained further for better
+results.The website informs the user that if we provided
+80 images the data would be split into 80 / 16 = 5 batches and once 5 batches have been put
+through the model, one epoch will be completed.As this
+is a close margin, we can assume that the image input has a large influence of the percentage
+different such as the position of the butterfly in the picture, or the color of the butterfly.Finally, we have
+learning rate and the website provides a note to be extremely careful when adjusting this number
+(0.001), as small differences can have huge effects on how the model will learn.After the
+examples have been gathered, the user is able to train the model and immediately test it to see if
+it can correctly classify new examples.Training the classes:
+Teachable Machine makes training the classes created very simple but doing this manually could
+prove to be a very time consuming and tedious process.Increasing the epochs will generally help
+the model learn to predict the data and is a good idea to change the epochs until a desired result
+is accomplished.Interesting aspects:
+Something interesting about Teachable Machine that I did not get around to attempting as adding
+additional classes to train a model with.When I upload the pictures, we will be able to see if the model is
+taught enough to see the difference between these two new images.
+As I previously stated, this model can be trained more strictly
+in order to come out with better results and be more exact in the comparison.
+Although this seems very
+useful, it is extremely difficult as shown above where with some test training we input one type
+of butterfly and compared it with another and nearly did not get a 50%+ match.As for training the
+model, I will be using the default settings first and adjust them accordingly to see the differences.
+Preview:
+The final section of Teachable Machine is the preview part, and this allows the user to compare
+input pictures uploaded from a local device or taken through a webcam.Why is this tool relevant?
+A more refined version of this tool would be used for government use, as it allows for a good
+facial recognition software.Another aspect of
+Teachable Machine is the audio project, since the website explains that is possible to teach the
+computer the difference between two genres.This type of
+artificial intelligence can prove extremely beneficial as it can provide our society with more
+security.The results in the following image are very interesting as
+this image is closer to the initial lighthouse than the previously tested lighthouse image.Our
+trained model is saying that this new image chosen is 52% like the first class (butterfly).As previously stated, we will move onto the training model portion of the website, which will
+allow me to train the computer to recognize each of these pictures separately.Although, this website provides us with
+a “Train Model” button after inputting settings such as epochs, batch size and learning rate.For example, in the previous picture I had put the epochs to 50 (default), this means that the
+model will work through the training dataset 50 times.This website can gather information input by the
+user and group the examples into classes or categories for the computer to learn.Epochs means that each of the classes have been put through the training model at least one time.
+Lastly, I will be comparing an outlier image of pebbles with a small plant to see which the
+trained model will lean more towards.The user can use previously downloaded files or take
+live pictures for our model.In order to demonstrate
+this section, I found more images to see how training my model went.Continuing onward we can test our lighthouse class in a similar fashion by choosing a different
+image.I gathered an additional
+butterfly and lighthouse image.If a model is trained extremely efficiently, we could make a security system that
+when armed could detect if an unknown person enters the building.The contents of these classes will be
+how we train our computer to recognize similar images.From my understanding I can add many more classes
+which can help narrow down an input image when previewing.The website also informs the user that this
+number will typically not need to be modified to get good training results.The image below shows the types of files or images Teachable
+Machine can use.Teachable Machine is a web-based tool that can create machine learning
+models fast, easy, and accessible to every user.This website interested me the most as it utilizes machine learning and recognition models used
+by the computer.Finally, Teachable Machine can export the model creates
+for projects, sites, apps, and download or host it online.Another setting is batch size with the default being 16, and a bath is a set of
+samples used in a singular iteration of training.Teachable Machine is extremely flexible
+about what can be taught to the computer.Another application for everyday commercial use would be a home
+security system.The tool I selected for project four of Intro to Artificial Intelligence is the Teachable Machine.
+This feature is something I expect to test further in
+the future.https://teachablemachine.withgoogle.com/
+

@@ -1,127 +1,142 @@
 import socket
-from bson import BSON
-from bson import decode_all
+import bson
 import hashlib
 import datetime
 import json
 import random
-import os
+import logging
 
 def compute_unique_id(data_object):
-    # Convert the object to a JSON string first
-    data_str = json.dumps(data_object, sort_keys=True, default=str)
+    # Convert the object to a string
+    data_str = str(bson.dumps(data_object))
+    
+    # Append the current date and time
     current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    
     combined_data = data_str + current_time + str(random.random())
-    return hashlib.sha256(combined_data.encode()).hexdigest()
+    
+    # Generate SHA-256 hash
+    unique_id = hashlib.sha256(combined_data.encode()).hexdigest()
+    
+    return unique_id
 
 def send_bson_obj(job):   
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('localhost', 12345))
-        bson_data = BSON.encode(job)
-        s.sendall(bson_data)
-        print("Data sent successfully")
-    except Exception as e:
-        print(f"Error sending data: {e}")
-    finally:
-        s.close()
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(('localhost', 12345))  # Ensure this line is present and correctly written
+    s.sendall(bson.dumps(job))
+    s.close()
 
 def id_generator(job):
-    job['ID'] = compute_unique_id(job)
-    for category in ['Documents', 'Images', 'Audio', 'Video']:
-        if f'NumberOf{category}' in job and job[f'NumberOf{category}'] > 0:
-            for item in job[category]:
-                item['ID'] = job['ID']
-                item[f'{category[:-1]}ID' if category != 'Documents' else 'DocumentId'] = compute_unique_id(item)
+    job['ID'] = compute_unique_id(job)  # Assigning unique ID as a string
+    if 'NumberOfDocuments' in job and job['NumberOfDocuments'] > 0:
+        for document in job['Documents']:
+            document['ID'] = job['ID']
+            document['DocumentId'] = compute_unique_id(document)
+    if 'NumberOfImages' in job and job['NumberOfImages'] > 0:
+        for image in job['Images']:
+            image['ID'] = job['ID']
+            image['PictureID'] = compute_unique_id(image)
+    if 'NumberOfAudio' in job and job['NumberOfAudio'] > 0:
+        for audio in job['Audio']:
+            audio['ID'] = job['ID']
+            audio['AudioID'] = compute_unique_id(audio)
+    if 'NumberOfVideo' in job and job['NumberOfVideo'] > 0:
+        for video in job['Video']:
+            video['ID'] = job['ID']
+            video['VideoID'] = compute_unique_id(video)
     return job
 
-def read_file(file_path):
-    try:
-        with open(file_path, 'rb') as f:
-            return f.read(), os.path.basename(file_path)
-    except FileNotFoundError:
-        print(f"File not found: {file_path}")
-        return None, None
 
 if __name__ == '__main__':
     job = { 
-        "ID": "ObjectID",  
-        "NumberOfDocuments": 2,  # Adjusted for 2 documents
-        "NumberOfImages": 1,
-        "NumberOfAudio": 2,
-        "NumberOfVideo": 1,
-        "Documents": [
-            {
-                "ID": "ObjectID",  
-                "DocumentId": "ObjectID",
-                "DocumentType": "String",
-                "FileName": "String",
-                "Payload": b"Binary"
-            },
-            
-            {
-                "ID": "ObjectID",
-                "DocumentId": "ObjectID",
-                "DocumentType": "txt",  
-                "FileName": "hello_world.txt",
-                "Payload": b"Hello, World!"  
-            }
-        ],
-        "Images": [
-            {
-                "ID": "ObjectID", 
-                "PictureID": "ObjectID",
-                "PictureType": "String",
-                "FileName": "String",
-                "Payload": b"Binary"
-            }
-        ],
-        "Audio": [
-            {
-                "ID": "ObjectID", 
-                "AudioID": "ObjectID",
-                "AudioType": "String",
-                "FileName": "String",
-                "Payload": b"Binary"
-            },
-            {
-                "ID": "ObjectID", 
-                "AudioID": "ObjectID",
-                "AudioType": "String",
-                "FileName": "String",
-                "Payload": b"Binary2"
-            }
-        ],
-        "Video": [
-            {
-                "ID": "ObjectID", 
-                "VideoID": "ObjectID",
-                "VideoType": "String",
-                "FileName": "String",
-                "Payload": b"Binary5"
-            },
-        ],
-    }
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    files_to_read = [
-        ('Project_4.pdf', 'Documents', 0, 'DocumentType', 'pdf'),
-        ('my_video.mp4', 'Video', 0, 'VideoType', 'mp4'),
-        ('x.png', 'Images', 0, 'PictureType', 'png'),
-        ('audio.mp3', 'Audio', 0, 'AudioType', 'mp3'),
-        ('audio2.mp3', 'Audio', 1, 'AudioType', 'mp3')
-    ]
-
-    for filename, category, index, type_key, file_type in files_to_read:
-        file_path = os.path.join(script_dir, filename)
-        payload, name = read_file(file_path)
-        if payload is not None:
-            job[category][index]['Payload'] = payload
-            job[category][index][type_key] = file_type
-            job[category][index]["FileName"] = name
-        else:
-            print(f"Warning: Failed to load {filename}. The {category} data may be incomplete.")
-
+    "ID": "ObjectID",  
+    "NumberOfDocuments": 1,
+    "NumberOfImages": 1,
+    "NumberOfAudio": 2,
+    "NumberOfVideo": 1,
+    "Documents": [
+        {
+            "ID": "ObjectID",  
+            "DocumentId": "ObjectID",
+            "DocumentType": "String",
+            "FileName": "String",
+            "Payload": "Binary"
+        }
+    ],
+    "Images": [
+        {
+            "ID": "ObjectID", 
+            "PictureID": "ObjectID",
+            "PictureType": "String",
+            "FileName": "String",
+            "Payload": "Binary"
+        }
+    ],
+    "Audio": [
+        {
+            "ID": "ObjectID", 
+            "AudioID": "ObjectID",
+            "AudioType": "String",
+            "FileName": "String",
+            "Payload": "Binary"
+        },
+        {
+            "ID": "ObjectID", 
+            "AudioID": "ObjectID",
+            "AudioType": "String",
+            "FileName": "String",
+            "Payload": "Binary2"
+        }
+    ],
+    "Video": [
+        {
+            "ID": "ObjectID", 
+            "VideoID": "ObjectID",
+            "VideoType": "String",
+            "FileName": "String",
+            "Payload": "Binary5"
+        },
+    ],
+}
+    # take binary data from file
+    with open('Project_4.pdf', 'rb') as f:
+        job['Documents'][0]['Payload'] = f.read()
+        job['Documents'][0]["DocumentType"] = "pdf"
+        job['Documents'][0]["FileName"] = f.name
+        f.close()
+    with open('my_video.mp4', 'rb') as f:
+        job['Video'][0]['Payload'] = f.read()
+        job['Video'][0]["VideoType"] = "mp4"
+        job['Video'][0]["FileName"] = f.name
+        f.close()
+    with open('x.png', 'rb') as f:
+        job['Images'][0]['Payload'] = f.read()
+        job['Images'][0]["PictureType"] = "png"
+        job['Images'][0]["FileName"] = f.name
+        f.close()
+    with open('audio.mp3', 'rb') as f:
+        job['Audio'][0]['Payload'] = f.read()
+        job['Audio'][0]["AudioType"] = "mp3"
+        job['Audio'][0]["FileName"] = f.name
+        f.close()
+    with open('audio2.mp3', 'rb') as f:
+        job['Audio'][1]['Payload'] = f.read()
+        job['Audio'][1]["AudioType"] = "mp3"
+        job['Audio'][1]["FileName"] = f.name
+        f.close()
     id_generator(job)
+
+
+    logging.info(f"Documents: {len(job['Documents'])}")
+    logging.info(f"Images: {len(job['Images'])}")
+    logging.info(f"Audio: {len(job['Audio'])}")
+    logging.info(f"Video: {len(job['Video'])}")
+
+
     send_bson_obj(job)
-    print("Script execution completed.")
+    
+
+
+
+
+    

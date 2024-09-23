@@ -1,10 +1,11 @@
 # docker-compose.yml
-version: '3'
+version: '3'  
 
 services:
   rabbitmq_tshark:
     build:
       context: DockerFile/rabbitmq_with_terminal_shark/.
+
     image: rabbitmq_tshark:latest
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
@@ -47,11 +48,3 @@ services:
       rabbitmq_tshark:
         condition: service_healthy
     command: ["python", "setup.py"]
-
-  dashboard_module:
-    build: ./DockerFile/Dashboard_Module
-    image: dashboard_module:latest
-    depends_on:
-      - rabbitmq_tshark
-    ports:
-      - "5000:5000"

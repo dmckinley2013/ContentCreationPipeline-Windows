@@ -1,0 +1,7 @@
+bson
+pika
+unittest2  # For unittest support if needed beyond the standard library
+spacy
+pdfplumber
+Pillow  # PIL (Python Imaging Library)
+PyMuPDF  # fitz is from this library

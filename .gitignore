@@ -1,0 +1,36 @@
+# Ignore virtual environment directories
+venv/
+env/
+.venv/
+.env/
+
+# Ignore Python bytecode files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore distribution and packaging files
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Ignore virtual environment configuration files
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Ignore IDE and editor specific files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore environment variables and config files
+.env
+*.env
+
+# Ignore macOS system files
+.DS_Store

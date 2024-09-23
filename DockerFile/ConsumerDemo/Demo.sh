@@ -14,7 +14,7 @@ for dir in "${directories[@]}"; do
     # Find all Python files and run them
     for file in *.py; do
         echo "Running $file in $dir"
-        python3 "$file" &
+        python "$file" &
         
         # Store the PID of the Python script
         pids+=($!)
