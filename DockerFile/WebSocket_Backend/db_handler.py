@@ -11,7 +11,6 @@ class DBHandler:
         self.client = None
         self.db = None
         self.collection = None
-        self.chunk_buffer = {}
 
     def init_db(self):
         """Initialize the MongoDB connection."""
@@ -33,16 +32,6 @@ class DBHandler:
         status = message.get('Status', 'Processed')
         message_text = message.get('Message', 'No additional information')
 
-        # Adjust status and message_text based on the status
-        if status.lower() == 'processed':
-            status = 'Successfully Processed'
-            if message_text == 'No additional information':
-                message_text = 'Message successfully processed and sent'
-        else:
-            status = 'Processing Failed'
-            if message_text == 'No additional information':
-                message_text = 'Message processing or sending failed'
-
         document = {
             "time": timestamp,
             "job_id": job_id,
@@ -55,7 +44,7 @@ class DBHandler:
 
         try:
             self.collection.insert_one(document)
-            logging.info(f"Saved message to MongoDB: {job_id}")
+            logging.info(f"Saved message to MongoDB: {document}")
         except Exception as e:
             logging.error(f"Failed to save message to MongoDB: {e}")
 
@@ -75,34 +64,15 @@ class DBHandler:
     def load_messages(self):
         """Load messages from the database."""
         try:
-            messages = self.collection.find().sort("time", -1)
-            logging.info("Loaded messages from MongoDB")
-            return list(messages)
+            # Get messages from the collection
+            messages = list(self.collection.find().sort("time", -1))
+            message_count = len(messages)  # Count the number of messages
+
+            logging.info(f"Loaded {message_count} messages from MongoDB")
+            return messages
         except Exception as e:
             logging.error(f"Failed to load messages from MongoDB: {e}")
-            return []
-
-    def handle_chunked_message(self, chunk):
-        """Handle chunked messages."""
-        key = (chunk['ID'], chunk.get('DocumentId') or chunk.get('PictureID') or chunk.get('AudioID') or chunk.get('VideoID'))
-        if key not in self.chunk_buffer:
-            self.chunk_buffer[key] = {}
-        
-        self.chunk_buffer[key][chunk['ChunkNumber']] = chunk
-
-        if len(self.chunk_buffer[key]) == chunk['TotalChunks']:
-            full_message = self.reassemble_chunks(self.chunk_buffer[key])
-            self.save_message_to_db(full_message)
-            del self.chunk_buffer[key]
-
-    def reassemble_chunks(self, chunks):
-        """Reassemble chunked messages."""
-        sorted_chunks = sorted(chunks.items())
-        reassembled = sorted_chunks[0][1].copy()
-        reassembled['Payload'] = b''.join(chunk['Payload'] for _, chunk in sorted_chunks)
-        del reassembled['ChunkNumber']
-        del reassembled['TotalChunks']
-        return reassembled
+        return []
 
 
 # Example usage:

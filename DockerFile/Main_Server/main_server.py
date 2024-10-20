@@ -33,29 +33,37 @@ def send_bson_obj(job):
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
+
         channel.queue_declare(queue='Dashboard', durable=True)
 
+        # Go through each key, excluding Video
         for key in ['Documents', 'Images', 'Audio']:
             if key in job and len(job[key]) > 0:
                 for item in job[key]:
                     try:
-                        # Log the type and ID of each item before sending
-                        logging.info(f"Sending {key}: ID={item.get('ID')}, FileName={item.get('FileName')}")
-                        
-                        # Publish the message
+                        # Log message details before sending
+                        logging.info(f"Attempting to send {key}: ID={item.get('ID')}, FileName={item.get('FileName')}")
+
+                        # Send the message as BSON
                         channel.basic_publish(
                             exchange='',
                             routing_key='Dashboard',
                             body=BSON.encode(item),
                             properties=pika.BasicProperties(delivery_mode=2)
                         )
-                    except Exception as e:
-                        logging.error(f"Failed to send {key} message: {e}")
 
+                        # Log successful sending
+                        logging.info(f"Successfully sent {key}: ID={item.get('ID')}, FileName={item.get('FileName')}")
+
+                    except Exception as e:
+                        logging.error(f"Failed to send {key}: {e}")
+        
         logging.info("All messages processed and sent to RabbitMQ")
         connection.close()
+
     except Exception as e:
         logging.error(f"Failed to send message to RabbitMQ: {e}")
+
 
 
 

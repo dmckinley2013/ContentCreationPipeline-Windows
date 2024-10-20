@@ -10,6 +10,9 @@ db_handler = DBHandler()
 db_handler.init_db()
 
 def convert_bson_to_json(data):
+    """
+    Recursively convert BSON data to JSON-compatible format.
+    """
     if isinstance(data, bytes):
         return data.decode('utf-8', errors='replace')
     elif isinstance(data, ObjectId):
@@ -21,14 +24,20 @@ def convert_bson_to_json(data):
     return data
 
 async def send_initial_messages(websocket):
+    """
+    Send all existing messages from the DB to the client upon connection.
+    """
     try:
-        messages = db_handler.load_messages()
+        messages = db_handler.load_messages()  # No limit applied
         serialized_messages = [convert_bson_to_json(msg) for msg in messages]
         await websocket.send(json.dumps({'type': 'initialMessages', 'data': serialized_messages}))
     except Exception as e:
         print(f"Error sending initial messages: {e}")
 
 async def handler(websocket, path):
+    """
+    Handle incoming WebSocket connections and messages.
+    """
     connected_clients.add(websocket)
     await send_initial_messages(websocket)
 
@@ -37,7 +46,10 @@ async def handler(websocket, path):
             message_data = json.loads(message)
             json_message = convert_bson_to_json(message_data)
 
+            # Save the message to the database
             db_handler.save_message_to_db(json_message)
+
+            # Broadcast the new message to all connected clients
             await broadcast_to_clients({'type': 'newMessage', 'data': json_message})
     except Exception as e:
         print(f"Error in WebSocket handler: {e}")
@@ -45,6 +57,9 @@ async def handler(websocket, path):
         connected_clients.remove(websocket)
 
 async def broadcast_to_clients(data):
+    """
+    Broadcast a message to all connected WebSocket clients.
+    """
     if connected_clients:
         await asyncio.gather(
             *[client.send(json.dumps(data)) for client in connected_clients],
@@ -52,6 +67,9 @@ async def broadcast_to_clients(data):
         )
 
 def consume_rabbitmq():
+    """
+    Consume messages from RabbitMQ and save them to the database.
+    """
     connection_parameters = pika.ConnectionParameters('localhost')
     connection = pika.BlockingConnection(connection_parameters)
     channel = connection.channel()
@@ -64,7 +82,10 @@ def consume_rabbitmq():
             message = BSON(body).decode()
             json_message = convert_bson_to_json(message)
 
+            # Save the message to the database
             db_handler.save_message_to_db(json_message)
+
+            # Broadcast the new message to all connected clients
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(broadcast_to_clients({'type': 'newMessage', 'data': json_message}))
@@ -75,6 +96,9 @@ def consume_rabbitmq():
     channel.start_consuming()
 
 async def main():
+    """
+    Run the WebSocket server.
+    """
     server = await websockets.serve(handler, "localhost", 5001)
     await server.wait_closed()
 
