@@ -85,12 +85,12 @@ def id_generator(job):
     return job
 
 if __name__ == '__main__':
-    num_messages = 4  # You can change this to any number you want
+    num_messages = 2  # You can change this to any number you want
     split_jobs = True  # Set to True for multiple jobs, False for one job
 
     base_job = { 
         "ID": "ObjectID",  
-        "NumberOfDocuments": 2,
+        "NumberOfDocuments": 1,
         "NumberOfImages": 2,
         "NumberOfAudio": 2,
         "Documents": [
