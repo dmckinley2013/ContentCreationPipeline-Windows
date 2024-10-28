@@ -1,4 +1,6 @@
-/* Dashboard.css */
+/* Importing Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap');
+
 :root {
     --primary-color: #1a237e;
     --secondary-color: #0d47a1;
@@ -10,14 +12,20 @@
     --text-primary: #2c3e50;
     --text-secondary: #546e7a;
     --border-color: #e0e6ed;
+    --font-family: 'Roboto', sans-serif; /* Adding font variable */
 }
 
 /* Main Layout */
+body {
+    font-family: var(--font-family);
+}
+
 .dashboard-wrapper {
     min-height: 100vh;
     background: var(--background-color);
     display: flex;
     flex-direction: column;
+    font-family: var(--font-family);
 }
 
 /* Header Styles */
@@ -26,6 +34,7 @@
     color: white;
     padding: 1rem 2rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-family: var(--font-family);
 }
 
 .header-content {
@@ -180,7 +189,7 @@
 
 .content-type.image {
     background: rgba(156, 39, 176, 0.1);
-    color: #9c27b0;  /* purple color */
+    color: #9c27b0;
 }
 
 .content-type.audio {
@@ -316,14 +325,14 @@
     padding: 0.5rem 1rem;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    background: white;
+    background-color: #ffffff; /* Ensures consistent background color */
     cursor: pointer;
     font-size: 0.875rem;
-    transition: all 0.2s;
+    transition: background 0.3s; /* Smoother transition for hover effect */
 }
 
 .page-button:hover:not(:disabled) {
-    background: #f5f5f5;
+    background-color: #f0f0f0; /* Slightly darker background on hover */
 }
 
 .page-button:disabled {
@@ -335,3 +344,31 @@
     color: var(--text-secondary);
     font-size: 0.875rem;
 }
+
+/* Expandable rows */
+.job-row {
+    cursor: pointer;
+    background-color: #f8fafc;
+    font-weight: 600;
+    transition: background 0.3s; /* Smooth transition on hover */
+}
+
+.job-row:hover {
+    background-color: #eaeaea; /* Slightly darker hover effect */
+}
+
+.expand-cell {
+    text-align: center;
+}
+
+.content-row {
+    background-color: #ffffff;
+    transition: background 0.3s; /* Smooth transition on hover */
+}
+
+.content-row .id-cell {
+    padding-left: 2rem;
+}
+
+
+

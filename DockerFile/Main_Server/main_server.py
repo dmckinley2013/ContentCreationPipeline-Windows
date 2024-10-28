@@ -13,17 +13,10 @@ MAX_MESSAGE_SIZE = 100 * 1024 * 1024  # 100 MB
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def compute_unique_id(data_object):
-    # Convert the object to a string
     data_str = str(BSON.encode(data_object))
-    
-    # Append the current date and time
     current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-    
     combined_data = data_str + current_time + str(random.random())
-    
-    # Generate SHA-256 hash
     unique_id = hashlib.sha256(combined_data.encode()).hexdigest()
-    
     return unique_id
 
 def split_payload(payload):
@@ -36,11 +29,10 @@ def send_bson_obj(job):
         channel.queue_declare(queue='Dashboard', durable=True)
 
         def get_content_type(key, item):
-            """Determine content type based on key and item data."""
             if key == 'Documents':
                 return 'Document'
             elif key == 'Images':
-                return 'Image'  # This changes 'Picture' to 'Image' consistently
+                return 'Image'
             elif key == 'Audio':
                 return 'Audio'
             return 'Unknown'
@@ -76,9 +68,8 @@ def send_bson_obj(job):
     except Exception as e:
         logging.error(f"Failed to send message to RabbitMQ: {e}")
 
-
 def id_generator(job):
-    job['ID'] = compute_unique_id(job)  # Assigning unique ID as a string
+    job['ID'] = compute_unique_id(job)
     if 'NumberOfDocuments' in job and job['NumberOfDocuments'] > 0:
         for document in job['Documents']:
             document['ID'] = job['ID']
@@ -94,73 +85,88 @@ def id_generator(job):
     return job
 
 if __name__ == '__main__':
-    job = { 
-    "ID": "ObjectID",  
-    "NumberOfDocuments": 1,
-    "NumberOfImages": 2,
-    "NumberOfAudio": 2,
-    "Documents": [
-        {
-            "ID": "ObjectID",  
-            "DocumentId": "ObjectID",
-            "DocumentType": "String",
-            "FileName": "String",
-            "Payload": b"Binary"
-        }
-    ],
-    "Images": [
-        {
-            "ID": "ObjectID", 
-            "PictureID": "ObjectID",
-            "PictureType": "String",
-            "FileName": "String",
-            "Payload": b"Binary"
-        }
-    ],
-    "Audio": [
-        {
-            "ID": "ObjectID", 
-            "AudioID": "ObjectID",
-            "AudioType": "String",
-            "FileName": "String",
-            "Payload": b"Binary"
-        },
-        {
-            "ID": "ObjectID", 
-            "AudioID": "ObjectID",
-            "AudioType": "String",
-            "FileName": "String",
-            "Payload": b"Binary2"
-        }
-    ],
-    
-}
-    # take binary data from file
+    num_messages = 4  # You can change this to any number you want
+    split_jobs = True  # Set to True for multiple jobs, False for one job
+
+    base_job = { 
+        "ID": "ObjectID",  
+        "NumberOfDocuments": 2,
+        "NumberOfImages": 2,
+        "NumberOfAudio": 2,
+        "Documents": [
+            {
+                "ID": "ObjectID",  
+                "DocumentId": "ObjectID",
+                "DocumentType": "String",
+                "FileName": "String",
+                "Payload": b"Binary"
+            }
+        ],
+        "Images": [
+            {
+                "ID": "ObjectID", 
+                "PictureID": "ObjectID",
+                "PictureType": "String",
+                "FileName": "String",
+                "Payload": b"Binary"
+            }
+        ],
+        "Audio": [
+            {
+                "ID": "ObjectID", 
+                "AudioID": "ObjectID",
+                "AudioType": "String",
+                "FileName": "String",
+                "Payload": b"Binary"
+            },
+            {
+                "ID": "ObjectID", 
+                "AudioID": "ObjectID",
+                "AudioType": "String",
+                "FileName": "String",
+                "Payload": b"Binary2"
+            }
+        ],
+    }
+
     try:
         with open('Project_4.pdf', 'rb') as f:
-            job['Documents'][0]['Payload'] = f.read()
-            job['Documents'][0]["DocumentType"] = "pdf"
-            job['Documents'][0]["FileName"] = f.name
+            base_job['Documents'][0]['Payload'] = f.read()
+            base_job['Documents'][0]["DocumentType"] = "pdf"
+            base_job['Documents'][0]["FileName"] = f.name
         with open('x.png', 'rb') as f:
-            job['Images'][0]['Payload'] = f.read()
-            job['Images'][0]["PictureType"] = "png"
-            job['Images'][0]["FileName"] = f.name
+            base_job['Images'][0]['Payload'] = f.read()
+            base_job['Images'][0]["PictureType"] = "png"
+            base_job['Images'][0]["FileName"] = f.name
         with open('audio.mp3', 'rb') as f:
-            job['Audio'][0]['Payload'] = f.read()
-            job['Audio'][0]["AudioType"] = "mp3"
-            job['Audio'][0]["FileName"] = f.name
+            base_job['Audio'][0]['Payload'] = f.read()
+            base_job['Audio'][0]["AudioType"] = "mp3"
+            base_job['Audio'][0]["FileName"] = f.name
         with open('audio2.mp3', 'rb') as f:
-            job['Audio'][1]['Payload'] = f.read()
-            job['Audio'][1]["AudioType"] = "mp3"
-            job['Audio'][1]["FileName"] = f.name
+            base_job['Audio'][1]['Payload'] = f.read()
+            base_job['Audio'][1]["AudioType"] = "mp3"
+            base_job['Audio'][1]["FileName"] = f.name
     except FileNotFoundError as e:
         logging.error(f"File not found: {e}")
         exit(1)
 
-    id_generator(job)
+    if split_jobs:
+        for i in range(num_messages):
+            job = base_job.copy()
+            job = id_generator(job)  # Generate unique IDs for job and content
 
-    logging.info(f"Documents: {len(job['Documents'])}")
-    logging.info(f"Images: {len(job['Images'])}")
-    logging.info(f"Audio: {len(job['Audio'])}")
+            logging.info(f"Sending job {i+1}/{num_messages} - Job ID: {job['ID']}")
+            send_bson_obj(job)
+            time.sleep(0.1)  # Optional delay between messages
+    else:
+        full_job = base_job.copy()
+        full_job['NumberOfDocuments'] = num_messages
+        full_job['Documents'] = [base_job['Documents'][0].copy() for _ in range(num_messages)]
+        full_job['NumberOfImages'] = num_messages * 2
+        full_job['Images'] = [base_job['Images'][0].copy() for _ in range(num_messages * 2)]
+        full_job['NumberOfAudio'] = num_messages * 2
+        full_job['Audio'] = [base_job['Audio'][0].copy() for _ in range(num_messages * 2)]
 
-    send_bson_obj(job)
+        full_job = id_generator(full_job)  # Generate unique IDs for the full job
+        logging.info(f"Sending one large job with {num_messages} content items - Job ID: {full_job['ID']}")
+        send_bson_obj(full_job)
