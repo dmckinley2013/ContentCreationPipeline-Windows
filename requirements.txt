@@ -5,3 +5,4 @@ spacy
 pdfplumber
 Pillow  # PIL (Python Imaging Library)
 PyMuPDF  # fitz is from this library
+pymongo
