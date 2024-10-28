@@ -8,7 +8,7 @@ import logging
 import pika
 import time
 
-MAX_MESSAGE_SIZE = 100 * 1024 * 1024  # 15 MB
+MAX_MESSAGE_SIZE = 100 * 1024 * 1024  # 100 MB
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -33,38 +33,48 @@ def send_bson_obj(job):
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
-
         channel.queue_declare(queue='Dashboard', durable=True)
 
-        # Go through each key, excluding Video
+        def get_content_type(key, item):
+            """Determine content type based on key and item data."""
+            if key == 'Documents':
+                return 'Document'
+            elif key == 'Images':
+                return 'Image'  # This changes 'Picture' to 'Image' consistently
+            elif key == 'Audio':
+                return 'Audio'
+            return 'Unknown'
+
         for key in ['Documents', 'Images', 'Audio']:
             if key in job and len(job[key]) > 0:
                 for item in job[key]:
                     try:
-                        # Log message details before sending
-                        logging.info(f"Attempting to send {key}: ID={item.get('ID')}, FileName={item.get('FileName')}")
+                        message_data = {
+                            'time': datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
+                            'job_id': item['ID'],
+                            'content_id': item.get('DocumentId') or item.get('PictureID') or item.get('AudioID'),
+                            'content_type': get_content_type(key, item),
+                            'file_name': item['FileName'],
+                            'status': 'Processed',
+                            'message': f"{get_content_type(key, item)} file '{item['FileName']}' successfully sent to {key} queue"
+                        }
 
-                        # Send the message as BSON
                         channel.basic_publish(
                             exchange='',
                             routing_key='Dashboard',
-                            body=BSON.encode(item),
+                            body=BSON.encode(message_data),
                             properties=pika.BasicProperties(delivery_mode=2)
                         )
 
-                        # Log successful sending
                         logging.info(f"Successfully sent {key}: ID={item.get('ID')}, FileName={item.get('FileName')}")
-
                     except Exception as e:
                         logging.error(f"Failed to send {key}: {e}")
-        
+
         logging.info("All messages processed and sent to RabbitMQ")
         connection.close()
 
     except Exception as e:
         logging.error(f"Failed to send message to RabbitMQ: {e}")
-
-
 
 
 def id_generator(job):

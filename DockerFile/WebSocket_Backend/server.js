@@ -22,15 +22,10 @@ const io = socketIo(server);
 
 const PORT = process.env.PORT || 5001;
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/dashboard_db', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => {
-    console.log('Connected to MongoDB');
-}).catch((err) => {
-    console.error('MongoDB connection error:', err);
-});
+// Connect to MongoDB without deprecated options
+mongoose.connect('mongodb://localhost:27017/dashboard_db')
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
 // WebSocket connection
 io.on('connection', (socket) => {
@@ -39,7 +34,7 @@ io.on('connection', (socket) => {
     // Fetch all messages from the database on client connection
     Message.find({})
         .sort({ createdAt: -1 }) // Sort by creation time (newest first)
-        .limit(100) // Limit to the most recent 100 messages
+        .limit(100) // Limit to the most recent 100 messages (adjust as needed)
         .then((messages) => {
             socket.emit('initialMessages', messages);
         })
