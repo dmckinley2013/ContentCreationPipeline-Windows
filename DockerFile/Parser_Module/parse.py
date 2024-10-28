@@ -45,7 +45,7 @@ def publish_to_rabbitmq(routing_key, message):
 
 def receive_bson_obj():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('localhost', 12345))
+        s.bind(('localhost', 0))
         s.listen()
         while True:
             conn, addr = s.accept()
