@@ -7,6 +7,12 @@ const Dashboard = () => {
     const [isConnected, setIsConnected] = useState(false);
     const ws = useRef(null);
 
+    // New state variables for filtering, search, and pagination
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [selectedContentType, setSelectedContentType] = useState('All');
+
     // Helper function to truncate IDs and show last 10 characters
     const truncateId = (id) => {
         if (!id) return '';
@@ -17,6 +23,28 @@ const Dashboard = () => {
     const normalizeContentType = (type) => {
         return type === 'Picture' ? 'Image' : type;
     };
+
+    // Filter messages based on search term and content type
+    const filteredMessages = messages.filter(msg => {
+        const matchesSearch = Object.values(msg).some(value => 
+            value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        const matchesContentType = selectedContentType === 'All' || 
+            normalizeContentType(msg.content_type) === selectedContentType;
+        
+        return matchesSearch && matchesContentType;
+    });
+
+    // Pagination calculations
+    const indexOfLastMessage = currentPage * itemsPerPage;
+    const indexOfFirstMessage = indexOfLastMessage - itemsPerPage;
+    const currentMessages = filteredMessages.slice(indexOfFirstMessage, indexOfLastMessage);
+    const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
+
+    // Reset to first page when search or filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, selectedContentType, itemsPerPage]);
 
     const formatTime = (timeString) => {
         if (!timeString) return 'No date';
@@ -128,7 +156,6 @@ const Dashboard = () => {
             }
         };
     }, []);
-
     return (
         <div className="dashboard-wrapper">
             <header className="dashboard-header">
@@ -177,9 +204,39 @@ const Dashboard = () => {
                 </div>
 
                 <div className="table-container">
-                    <div className="table-header">
-                        <h2>Processing History</h2>
+                    <div className="table-controls">
+                        <div className="search-bar">
+                            <input
+                                type="text"
+                                placeholder="Search all fields..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                            />
+                        </div>
+                        <div className="filter-controls">
+                            <select
+                                value={selectedContentType}
+                                onChange={(e) => setSelectedContentType(e.target.value)}
+                                className="filter-select"
+                            >
+                                <option value="All">All Types</option>
+                                <option value="Document">Document</option>
+                                <option value="Image">Image</option>
+                                <option value="Audio">Audio</option>
+                            </select>
+                            <select
+                                value={itemsPerPage}
+                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                className="page-size-select"
+                            >
+                                <option value={10}>10 per page</option>
+                                <option value={25}>25 per page</option>
+                                <option value={50}>50 per page</option>
+                            </select>
+                        </div>
                     </div>
+
                     <div className="table-wrapper">
                         <table className="dashboard-table">
                             <thead>
@@ -203,8 +260,8 @@ const Dashboard = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : messages.length > 0 ? (
-                                    messages.map((msg, index) => (
+                                ) : currentMessages.length > 0 ? (
+                                    currentMessages.map((msg, index) => (
                                         <tr key={`${msg.job_id}-${msg.content_id}-${index}`}>
                                             <td>{msg.time}</td>
                                             <td title={msg.job_id} className="id-cell">
@@ -234,6 +291,26 @@ const Dashboard = () => {
                                 )}
                             </tbody>
                         </table>
+
+                        <div className="pagination">
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="page-button"
+                            >
+                                Previous
+                            </button>
+                            <span className="page-info">
+                                Page {currentPage} of {totalPages || 1}
+                            </span>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className="page-button"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             </main>
