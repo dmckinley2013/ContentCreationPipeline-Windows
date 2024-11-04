@@ -81,6 +81,32 @@ This will:
 
 Important Note: If you see the program start compiling before the Docker containers are fully initialized (before RabbitMQ is ready), stop the program (Ctrl+C) and run it again. Sometimes the 45-second initialization wait time isn't enough for Docker containers to fully start. This is being updated to use dynamic checking instead of a fixed wait time.
 
+### 6. Running Tests with Main Server
+
+After your application is running (Docker containers initialized and all services started), you can run tests using the main server:
+
+```bash
+# Navigate to the Main Server directory
+cd BuildingTheDashboardModule/DockerFile/Main_Server
+
+# Run the main server
+python main_server.py
+```
+
+**Important Notes for Testing:**
+1. Only run `main_server.py` after all other services are fully initialized and running
+2. Make sure:
+   - Docker containers are fully initialized (RabbitMQ is ready)
+   - Parser Module is running
+   - WebSocket servers are running
+   - React frontend is running
+3. You should see the dashboard update in real-time as tests are processed
+
+If you encounter connection errors:
+1. Stop main_server.py (`Ctrl+C`)
+2. Verify all other services are running properly
+3. Try running main_server.py again
+
 ## Troubleshooting Common Issues
 
 ### Python/pip Issues
@@ -162,20 +188,5 @@ Important Note: If you see the program start compiling before the Docker contain
   rm -rf dashboard_env
   ```
 
-## Need Help?
 
-If you encounter issues not covered in this guide:
-1. Check the logs of the specific component that's failing
-2. Make sure all prerequisites are installed and up to date
-3. Ensure you're using the correct versions of Python, Node.js, and Docker
-4. Contact the project maintainer for support
 
-## Maintaining Clean Installations
-
-To keep your Python environment clean:
-1. Always use virtual environments for projects
-2. Only install packages you need
-3. Regularly update requirements.txt when adding new dependencies
-4. Document any special installation steps in this guide
-
-Remember: Never install Python packages globally unless absolutely necessary!
