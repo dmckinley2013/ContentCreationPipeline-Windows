@@ -1,50 +1,181 @@
-# Content Creation Pipeline
-## Setting up the environment
+# Installation Guide
 
-1. **Create a virtual environment** (in the main project directory):
+## Prerequisites
+- Python 3.10 or later
+- pip (Python package installer)
+- Node.js and npm (for React frontend)
+- Docker and Docker Compose
+
+## Setup Instructions
+
+### 1. Create a Virtual Environment
+
+This keeps your project dependencies isolated from other Python projects.
+
+Windows:
+```bash
+# Create virtual environment
+python -m venv dashboard_env
+
+# Activate virtual environment
+dashboard_env\Scripts\activate
+```
+
+Mac/Linux:
+```bash
+# Create virtual environment
+python -m venv dashboard_env
+
+# Activate virtual environment
+source dashboard_env/bin/activate
+```
+
+You'll know it's activated when you see `(dashboard_env)` at the start of your terminal line.
+
+### 2. Install Python Dependencies
+
+With your virtual environment activated:
+```bash
+# Install all required packages
+pip install -r requirements.txt
+
+# Install spaCy language model
+python -m spacy download en_core_web_lg
+```
+
+### 3. Install Node.js Dependencies
+
+For the React frontend:
+```bash
+cd react_frontend
+npm install
+cd ..
+```
+
+For the WebSocket backend:
+```bash
+cd WebSocket_Backend
+npm install
+cd ..
+```
+
+### 4. Verify Installation
+
+Test that key packages are installed:
+```bash
+python -c "import pika; import pymongo; import websockets; import spacy; print('All core packages installed successfully!')"
+```
+
+### 5. Running the Application
+
+Use the provided startup script:
+```bash
+python run_all.py
+```
+
+This will:
+1. Start Docker containers
+2. Launch the Parser Module
+3. Start the WebSocket backend
+4. Start the React frontend
+
+Important Note: If you see the program start compiling before the Docker containers are fully initialized (before RabbitMQ is ready), stop the program (Ctrl+C) and run it again. Sometimes the 45-second initialization wait time isn't enough for Docker containers to fully start. This is being updated to use dynamic checking instead of a fixed wait time.
+
+## Troubleshooting Common Issues
+
+### Python/pip Issues
+
+1. **"Package not found" errors:**
    ```bash
-   python -m venv env
-   ```
-
-2. **Activate the virtual environment**:
-   - On **Windows**:
-     ```bash
-     env\Scripts\activate
-     ```
-   - On **Mac/Linux**:
-     ```bash
-     source env/bin/activate
-     ```
-
-3. **Install dependencies** in the local environment:
-   ```bash
+   # Try updating pip
+   python -m pip install --upgrade pip
+   
+   # Then reinstall requirements
    pip install -r requirements.txt
    ```
 
-## Running the Docker Containers
+2. **Visual C++ Build Tools error (Windows):**
+   - Download and install Build Tools from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   - Restart your terminal and try installation again
 
-Ensure **Docker Desktop** is running if you are on Windows.
-
-1. **Start the Docker containers**:
+3. **spaCy model download fails:**
    ```bash
-   docker-compose up --build -d
-   ```
-## Run the UI
-1. **Navigate to the directory where 'dashboard_receiver.py' is located and run:**
-   ```bash
-   python dashboard_receiver.py
+   # Alternative download method
+   pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.5.0/en_core_web_lg-3.5.0-py3-none-any.whl
    ```
 
-## Running the Python Scripts
+### Docker Issues
 
-1. **Start listening on port 12345**:
-   Navigate to the directory where `parse.py` is located and run:
+1. **Docker containers won't start:**
    ```bash
-   python parse.py
+   # Remove existing containers
+   docker-compose down
+   
+   # Clean up Docker system
+   docker system prune
+   
+   # Try starting again
+   docker-compose up --build
    ```
 
-2. **Send data to port 12345** (open a new terminal):
-   Navigate to the directory where `main_server.py` is located and run:
+2. **Port conflicts:**
+   - Check if ports are in use: `netstat -ano | findstr PORT_NUMBER`
+   - Stop conflicting services or modify port numbers in docker-compose.yml
+
+### Node.js/React Issues
+
+1. **npm install fails:**
    ```bash
-   python main_server.py
+   # Clear npm cache
+   npm cache clean --force
+   
+   # Try installation again
+   npm install
    ```
+
+2. **Module not found errors:**
+   ```bash
+   # Remove node_modules and try fresh install
+   rm -rf node_modules
+   rm package-lock.json
+   npm install
+   ```
+
+## Virtual Environment Tips
+
+- To deactivate the virtual environment when you're done:
+  ```bash
+  deactivate
+  ```
+
+- If you install new packages, update requirements.txt:
+  ```bash
+  pip freeze > requirements.txt
+  ```
+
+- To completely remove the virtual environment:
+  ```bash
+  # Windows
+  rmdir /s /q dashboard_env
+  
+  # Mac/Linux
+  rm -rf dashboard_env
+  ```
+
+## Need Help?
+
+If you encounter issues not covered in this guide:
+1. Check the logs of the specific component that's failing
+2. Make sure all prerequisites are installed and up to date
+3. Ensure you're using the correct versions of Python, Node.js, and Docker
+4. Contact the project maintainer for support
+
+## Maintaining Clean Installations
+
+To keep your Python environment clean:
+1. Always use virtual environments for projects
+2. Only install packages you need
+3. Regularly update requirements.txt when adding new dependencies
+4. Document any special installation steps in this guide
+
+Remember: Never install Python packages globally unless absolutely necessary!
