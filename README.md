@@ -5,6 +5,7 @@
 - pip (Python package installer)
 - Node.js and npm (for React frontend)
 - Docker and Docker Compose
+- MongoDB
 
 ## Setup Instructions
 
