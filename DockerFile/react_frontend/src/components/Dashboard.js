@@ -136,8 +136,33 @@ const Dashboard = () => {
                     </div>
                 </div>
             </header>
-
+    
             <main className="dashboard-main">
+                <div className="stats-section">
+                    <div className="stat-card">
+                        <h3>Total Messages</h3>
+                        <p className="stat-number">{messages.length}</p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Documents</h3>
+                        <p className="stat-number">
+                            {messages.filter(m => m.content_type === 'Document').length}
+                        </p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Images</h3>
+                        <p className="stat-number">
+                            {messages.filter(m => m.content_type === 'Image' || m.content_type === 'Picture').length}
+                        </p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Audio Files</h3>
+                        <p className="stat-number">
+                            {messages.filter(m => m.content_type === 'Audio').length}
+                        </p>
+                    </div>
+                </div>
+    
                 <div className="table-container">
                     <div className="table-controls">
                         <div className="search-bar">
