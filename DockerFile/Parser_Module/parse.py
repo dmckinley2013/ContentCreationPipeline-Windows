@@ -1,9 +1,10 @@
 import socket
-import bson  # Binary JSON format
+from bson import BSON, encode, decode  # Binary JSON format , windows
 import threading  # For handling multiple clients concurrently
 import pika  # RabbitMQ client library
 from pika.exchange_type import ExchangeType
 from copy import deepcopy  # Import deepcopy if you need a deep copy
+import datetime
 
 def recvall(sock, expected_length):
     data = b''
@@ -28,7 +29,7 @@ def handle_client(client):
     bson_data = length_data + recvall(client, expected_length - 4)
 
     try:
-        obj = bson.loads(bson_data)
+        obj = decode(bson_data)
         parse_bson_obj(obj)
     except Exception as e:
         print(f"Error decoding BSON: {e}")
@@ -36,21 +37,78 @@ def handle_client(client):
 
 # Function to parse BSON object and publish data to RabbitMQ
 def parse_bson_obj(obj):
-    # Dictionary mapping data types to routing keys
-    data_types = {
-        'Documents': '.Document.',
-        'Images': '.Image.',
-        'Audio': '.Audio.',
-        'Video': '.Video.'
-    }
-    
-    # Iterate through each data type and publish relevant items
-    for data_type, routing_key in data_types.items():
-        if obj[data_type]:
-            for item in obj[data_type]:
-                publish_to_rabbitmq(routing_key, item)
-        else:
-            print(f"No {data_type.lower()} to send")
+    try:
+        # Dictionary mapping data types to routing keys
+        data_types = {
+            'Documents': '.Document.',
+            'Images': '.Image.',
+            'Audio': '.Audio.',
+            'Video': '.Video.'
+        }
+
+        # Connect to RabbitMQ
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        channel = connection.channel()
+        
+        # Iterate through each data type and publish relevant items
+        for data_type, routing_key in data_types.items():
+            if obj[data_type]:
+                for item in obj[data_type]:
+                    # Prepare dashboard message with time
+                    dashboard_message = {
+                        'time': datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
+                        'job_id': item['ID'],
+                        'content_id': (item.get('DocumentId') or item.get('PictureID') or 
+                                     item.get('AudioID') or item.get('VideoID')),
+                        'content_type': data_type.rstrip('s'),  # Remove 's' from end
+                        'file_name': item['FileName'],
+                        'status': 'Processed',
+                        'message': f"{data_type.rstrip('s')} file '{item['FileName']}' successfully sent to {data_type} queue"
+                    }
+
+                    # Send to dashboard
+                    channel.basic_publish(
+                        exchange='',
+                        routing_key='Dashboard',
+                        body=encode(dashboard_message),
+                        properties=pika.BasicProperties(delivery_mode=2)
+                    )
+
+                    # Send original item to content queue
+                    channel.basic_publish(
+                        exchange='Topic',
+                        routing_key=routing_key,
+                        body=encode(item),
+                        properties=pika.BasicProperties(delivery_mode=2)
+                    )
+
+            else:
+                print(f"No {data_type.lower()} to send")
+
+        connection.close()
+
+    except Exception as e:
+        print(f"Error in parse_bson_obj: {e}")
+        
+        try:
+            # Send error status to dashboard
+            error_message = {
+                'time': datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
+                'status': 'Error',
+                'message': str(e)
+            }
+            
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            channel = connection.channel()
+            channel.basic_publish(
+                exchange='',
+                routing_key='Dashboard',
+                body=bson.encode(error_message),
+                properties=pika.BasicProperties(delivery_mode=2)
+            )
+            connection.close()
+        except Exception as e2:
+            print(f"Error sending error status: {e2}")
 
 # Function to publish messages to RabbitMQ
 def publish_to_rabbitmq(routing_key, message):
@@ -69,10 +127,10 @@ def publish_to_rabbitmq(routing_key, message):
         status_message['Message'] = 'Message has been preprocessed and sent to the respective queues' 
 
         
-        status_message=bson.dumps(status_message)
+        status_message=encode(status_message)
 
         # Serialize the message to BSON
-        message = bson.dumps(message)
+        message = encode(message)
 
         '''
             Sample message  to be sent to the respective queues
@@ -124,7 +182,7 @@ def publish_to_rabbitmq(routing_key, message):
         del status_message['Payload']
         status_message['Status'] = 'Preprocessing Failed'
         status_message['Message'] = e
-        status_message=bson.dumps(status_message)
+        status_message=encode(status_message)
         channel.basic_publish(
             exchange="Topic",
             routing_key=".Status.",
@@ -138,7 +196,7 @@ def receive_bson_obj():
     # Create a TCP/IP socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Bind the socket to localhost on port 12345
-        s.bind(('localhost', 5672))
+        s.bind(('localhost', 12345))
         # Listen for incoming connections
         s.listen()
 

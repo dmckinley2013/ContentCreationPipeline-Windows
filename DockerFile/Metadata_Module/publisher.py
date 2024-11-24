@@ -1,9 +1,13 @@
 import socket
-import bson  # Binary JSON format
-import threading  # For handling multiple clients concurrently
-import pika  # RabbitMQ client library
+from bson import BSON, decode, encode
+import threading
+import pika
 from pika.exchange_type import ExchangeType
-from copy import deepcopy  # Import deepcopy if you need a deep copy
+from copy import deepcopy
+import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def recvall(sock, expected_length):
     data = b''
@@ -15,107 +19,114 @@ def recvall(sock, expected_length):
     return data
 
 def handle_client(client):
-    # Initially, receive the length of the BSON document (first 4 bytes)
-    length_data = client.recv(4)
-    if len(length_data) < 4:
-        print("Failed to receive the complete length of BSON document")
-        return
-
-    # Determine the expected length of the BSON document
-    expected_length = int.from_bytes(length_data, byteorder='little')
-    
-    # Receive the rest of the BSON document based on its length
-    bson_data = length_data + recvall(client, expected_length - 4)
-
     try:
-        obj = bson.loads(bson_data)
-        publish_to_rabbitmq('.Status.', obj)
-    except Exception as e:
-        print(f"Error decoding BSON: {e}")
-   
+        # Initially, receive the length of the BSON document
+        length_data = client.recv(4)
+        if len(length_data) < 4:
+            print("Failed to receive the complete length of BSON document")
+            return
 
-# Function to publish messages to RabbitMQ
+        # Get full document
+        expected_length = int.from_bytes(length_data, byteorder='little')
+        bson_data = length_data + recvall(client, expected_length - 4)
+
+        # Decode BSON data before sending to RabbitMQ
+        obj = decode(bson_data)
+        publish_to_rabbitmq('.Status.', obj)  # Send decoded object
+
+    except Exception as e:
+        logging.error(f"Error handling client: {e}")
+    finally:
+        client.close()
+
+def parse_status_message(obj):
+    try:
+        # Prepare dashboard message
+        dashboard_message = {
+            'time': datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
+            'job_id': obj.get('JobID'),
+            'content_id': obj.get('contentID'),
+            'status': obj.get('Status', 'Unknown'),
+            'details': obj.get('details'),
+            'message': f"Status update received for job {obj.get('JobID')}"
+        }
+
+        # Send to RabbitMQ
+        publish_to_rabbitmq('.Status.', dashboard_message)
+        logging.info(f"Status message processed for job {obj.get('JobID')}")
+
+    except Exception as e:
+        logging.error(f"Error parsing status message: {e}")
+        raise
+
 def publish_to_rabbitmq(routing_key, message):
     try:
-        # Establish a connection to the RabbitMQ server
-        connection_parameters = pika.ConnectionParameters('localhost')
-        connection = pika.BlockingConnection(connection_parameters)
-
-        # Create a channel for communication with RabbitMQ
+        # Connect to RabbitMQ
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
 
-        #prepping status message
-        status_message = message.copy()
- 
+        # Add timestamp if not present
+        if 'time' not in message:
+            message['time'] = datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p')
 
-        
-        status_message=bson.dumps(status_message)
-
-        # Serialize the message to BSON
-        message = bson.dumps(message)
-
-        '''
-        This will be sent to the dashboard
-         {
-         
-         'JobID': '0.3864155992230227', 
-         'contentID': '123456', 
-         'Status': 'user inout for now', 
-         'timestamp': '2024-09-19 16:57:05', 
-         'details': 1,
-        }
-        '''
-        #publish status message to dashboard
         channel.basic_publish(
-            exchange="Topic",
-            routing_key=".Status.",
-            body=status_message
+            exchange='Topic',
+            routing_key=routing_key,
+            body=str(message),  # Send as string instead of BSON
+            properties=pika.BasicProperties(
+                delivery_mode=2,
+                content_type='text/plain'  # Changed content type
+            )
         )
+
+        logging.info(f"Message published to {routing_key}")
+        connection.close()
 
     except Exception as e:
-        '''
-        This will be sent to the dashboard
-            {
-                "ID": "ObjectID",  
-                "DocumentId": "ObjectID",
-                "DocumentType": "String",
-                "FileName": "String",
-                "Status": "Preprocessing Failed",
-                "Message": "String"
+        logging.error(f"Error publishing to RabbitMQ: {e}")
+        try:
+            error_message = {
+                'time': datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
+                'status': 'Error',
+                'message': str(e),
+                'job_id': message.get('job_id', 'Unknown'),
+                'content_id': message.get('content_id', 'Unknown')
             }
-        '''
-        status_message = message.copy()
-        del status_message['Payload']
-        status_message['Status'] = 'Preprocessing Failed'
-        status_message['Message'] = e
-        status_message=bson.dumps(status_message)
-        channel.basic_publish(
-            exchange="Topic",
-            routing_key=".Status.",
-            body= status_message
-        )
-    # Close the connection to RabbitMQ
-    connection.close()
+            
+            temp_conn = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            temp_channel = temp_conn.channel()
+            
+            temp_channel.basic_publish(
+                exchange='Topic',
+                routing_key='.Status.',
+                body=str(error_message),  # Send as string
+                properties=pika.BasicProperties(
+                    delivery_mode=2,
+                    content_type='text/plain'
+                )
+            )
+            temp_conn.close()
+        except Exception as e2:
+            logging.error(f"Failed to send error status: {e2}")
 
-# Function to start a socket server and listen for incoming BSON objects
 def receive_bson_obj():
-    # Create a TCP/IP socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        # Bind the socket to localhost on port 12345
-        s.bind(('localhost', 12345))
-        # Listen for incoming connections
-        s.listen()
+        s.bind(('localhost', 12346))
+        s.listen(1)
+        logging.info("Status server listening on localhost:12346")
 
-        # Continuously accept new connections
         while True:
-            # Accept a connection
-            conn, addr = s.accept()
-            print('Connected by', addr)
-            # Handle each client connection in a separate thread
-            threading.Thread(target=handle_client, args=(conn,)).start()
-    
+            try:
+                conn, addr = s.accept()
+                logging.info(f'Connected by {addr}')
+                threading.Thread(target=handle_client, args=(conn,)).start()
+            except Exception as e:
+                logging.error(f"Error accepting connection: {e}")
 
-# Main function to start the server
 if __name__ == '__main__':
-    receive_bson_obj()
-    print("all message send")
+    try:
+        receive_bson_obj()
+    except KeyboardInterrupt:
+        logging.info("Server shutting down...")
+    except Exception as e:
+        logging.error(f"Server error: {e}")

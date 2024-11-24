@@ -37,3 +37,6 @@ pip-delete-this-directory.txt
 
 node_modules/
 **/node_modules/
+
+custom_ner_modelREL/
+**/custom_ner_modelREL/

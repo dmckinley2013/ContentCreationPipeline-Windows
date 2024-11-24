@@ -2,43 +2,44 @@ import socket
 import bson
 import hashlib
 import datetime
-import json
 import random
-from publisher import publish_to_rabbitmq # to make messageSender functional
+import logging
+from publisher import publish_to_rabbitmq
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class statusFeed:
     @staticmethod
-    def messageBuilder(content_ID,statusMessage,details):
-        messageID = str(random.random())
-        contentID = content_ID # other functions will pass this parameter        
-        #status = from other modules       
-        cts = datetime.datetime.now() # current timestamp
-        format_cts = cts.strftime('%Y-%m-%d %H:%M:%S') # formatting
-        #details = from other modules
+    def messageBuilder(content_ID, statusMessage, details):
+        print("Inside Message Builder")
+        try:
+            messageID = str(random.random())
+            cts = datetime.datetime.now()
+            format_cts = cts.strftime('%m/%d/%Y, %I:%M:%S %p')
 
-        #other inputs/variables as necessary 
+            job = {
+                "JobID": messageID,
+                "contentID": content_ID,
+                "Status": statusMessage,
+                "time": format_cts,  # Using consistent time format
+                "details": details,
+                "message": f"Status update for content {content_ID}"
+            }
+            
+            logging.info(f"Built status message for content {content_ID}")
+            messageSender(job)
+            
+        except Exception as e:
+            logging.error(f"Error building message: {e}")
+            raise
 
-        #build BSON Builder
-        job = { 
-            "JobID": messageID,  
-            "contentID": contentID,
-            "Status": statusMessage,
-            "timestamp": format_cts,
-            "details": details
-        }
-        print(job)
-        # send back to messageSender
-        messageSender(job)
-
-#This sends to our rabbitMQ publisher .. Like their parse.py Choose a port and have our publisher listen on that port
 def messageSender(bsonObj):
-    #sending to port
-    port = '12345'
-    publish_to_rabbitmq(port, bsonObj)
-    
-# main function
-if __name__ == '__main__':
-    user_input = input("Enter contentID: ")
-    statusMessage = input("Enter status of job: ")
-    details = input("Additional Details: ")
-    statusFeed.messageBuilder(user_input,statusMessage,details)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("localhost", 12346))
+        s.sendall(bson.encode(bsonObj))
+        s.close()
+        logging.info(f"Status message sent for job {bsonObj.get('JobID')}")
+    except Exception as e:
+        logging.error(f"Error sending message: {e}")
+        raise 
