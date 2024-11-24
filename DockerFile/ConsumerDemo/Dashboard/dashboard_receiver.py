@@ -1,26 +1,24 @@
 import pika
-import bson
-import logging
+from pika.exchange_type import ExchangeType
+from bson import BSON
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(asctime)s - %(message)s')
-
-def consumer_connection(queues):
+def consumer_connection(queue_name):
     # Establish a connection to RabbitMQ server
     connection_parameters = pika.ConnectionParameters('localhost')
     connection = pika.BlockingConnection(connection_parameters)
+
+    # Create a channel
     channel = connection.channel()
 
-    # Start consuming from the queues without declaring them
-    for queue_name in queues:
-        # Directly consume from the queue without declaring it
-        channel.basic_consume(
-            queue=queue_name,
-            auto_ack=True,
-            on_message_callback=on_message_received
-        )
+    # Declare a queue (queue names are generated based on the routing key)
+    queue_name = queue_name
 
-    print("Dashboard Receiver Started Consuming from all queues")
-
+    # Consume messages from the queue
+    a=channel.basic_consume(queue=queue_name, auto_ack=True,
+        on_message_callback=on_message_received)
+    
+    print('Starting Consuming')
+    
     try:
         channel.start_consuming()
     except KeyboardInterrupt:
@@ -28,15 +26,11 @@ def consumer_connection(queues):
         connection.close()
 
 def on_message_received(ch, method, properties, body):
-    try:
-        # Decode the BSON message body
-        message_data = bson.BSON.decode(body)
-        logging.info(f"Received message from {method.routing_key}: {message_data}")
-    except Exception as e:
-        logging.error(f"Failed to decode message from {method.routing_key}: {e}")
+    body=BSON.encode(body)
+    print(f"""
+            received new message: {body}
+            routing key: {method.routing_key}
+            """)
+    
 
-# List of queues to listen to
-queues = ['Audio', 'Document', 'Image']
-
-if __name__ == '__main__':
-    consumer_connection(queues)
+consumer_connection('Dashboard') # This is the routing key for the dashboard

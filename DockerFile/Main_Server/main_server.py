@@ -26,7 +26,26 @@ def send_bson_obj(job):
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
-        channel.queue_declare(queue='Dashboard', durable=True)
+        
+        # Dictionary mapping content types to queue names
+        queues = {
+            'Documents': 'Document',
+            'Images': 'Image',
+            'Audio': 'Audio',
+            'Video': 'Video',
+            'Dashboard': 'Dashboard'
+        }
+        
+        # Declare queues passively (don't create or modify if they exist)
+        for queue_name in queues.values():
+            try:
+                channel.queue_declare(queue=queue_name, passive=True)
+            except pika.exceptions.ChannelClosedByBroker:
+                # Reconnect if channel was closed
+                connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+                channel = connection.channel()
+                # Create queue if it doesn't exist
+                channel.queue_declare(queue=queue_name, durable=True)
 
         def get_content_type(key, item):
             if key == 'Documents':
@@ -35,38 +54,52 @@ def send_bson_obj(job):
                 return 'Image'
             elif key == 'Audio':
                 return 'Audio'
+            elif key == 'Video':
+                return 'Video'
             return 'Unknown'
 
-        for key in ['Documents', 'Images', 'Audio']:
+        for key in ['Documents', 'Images', 'Audio', 'Video']:
             if key in job and len(job[key]) > 0:
                 for item in job[key]:
                     try:
-                        message_data = {
+                        # Prepare dashboard message
+                        dashboard_message = {
                             'time': datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
                             'job_id': item['ID'],
-                            'content_id': item.get('DocumentId') or item.get('PictureID') or item.get('AudioID'),
+                            'content_id': item.get('DocumentId') or item.get('PictureID') or item.get('AudioID') or item.get('VideoID'),
                             'content_type': get_content_type(key, item),
                             'file_name': item['FileName'],
                             'status': 'Processed',
                             'message': f"{get_content_type(key, item)} file '{item['FileName']}' successfully sent to {key} queue"
                         }
 
+                        # Send to dashboard queue
                         channel.basic_publish(
                             exchange='',
                             routing_key='Dashboard',
-                            body=BSON.encode(message_data),
+                            body=BSON.encode(dashboard_message),
                             properties=pika.BasicProperties(delivery_mode=2)
                         )
 
-                        logging.info(f"Successfully sent {key}: ID={item.get('ID')}, FileName={item.get('FileName')}")
+                        # Send to content-specific queue
+                        channel.basic_publish(
+                            exchange='',
+                            routing_key=queues[key],
+                            body=BSON.encode(item),
+                            properties=pika.BasicProperties(delivery_mode=2)
+                        )
+
+                        logging.info(f"Successfully sent {key}: ID={item.get('ID')}, FileName={item.get('FileName')} to {queues[key]}")
                     except Exception as e:
                         logging.error(f"Failed to send {key}: {e}")
+                        raise
 
-        logging.info("All messages processed and sent to RabbitMQ")
+        logging.info("All messages processed and sent to respective RabbitMQ queues")
         connection.close()
 
     except Exception as e:
         logging.error(f"Failed to send message to RabbitMQ: {e}")
+        raise
 
 def id_generator(job):
     job['ID'] = compute_unique_id(job)
@@ -82,6 +115,10 @@ def id_generator(job):
         for audio in job['Audio']:
             audio['ID'] = job['ID']
             audio['AudioID'] = compute_unique_id(audio)
+    if 'NumberOfVideo' in job and job['NumberOfVideo'] > 0:
+        for video in job['Video']:
+            video['ID'] = job['ID']
+            video['VideoID'] = compute_unique_id(video)
     return job
 
 if __name__ == '__main__':
