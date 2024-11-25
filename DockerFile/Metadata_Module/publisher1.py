@@ -41,44 +41,24 @@ def publish_to_rabbitmq(routing_key, message):
         connection_parameters = pika.ConnectionParameters('localhost')
         connection = pika.BlockingConnection(connection_parameters)
         channel = connection.channel()
-        
-        # Convert dictionary to string representation
-        message_str = str(message)
-        
+
+        # Encode the message in BSON
+        bson_message = encode(message)
+
         channel.basic_publish(
             exchange="Topic",
-            routing_key=".Status.",
-            body=message_str,
+            routing_key=routing_key,
+            body=bson_message,
             properties=pika.BasicProperties(
-                content_type='text/plain',
-                delivery_mode=2
+                content_type='application/bson',
+                delivery_mode=2  # Persistent message
             )
         )
-        
+        print("Message published successfully")
         connection.close()
-        
+
     except Exception as e:
         print(f"Error publishing to RabbitMQ: {e}")
-        try:
-            error_message = {
-                'Status': 'Preprocessing Failed',
-                'Message': str(e)
-            }
-            
-            channel.basic_publish(
-                exchange="Topic",
-                routing_key=".Status.",
-                body=str(error_message),
-                properties=pika.BasicProperties(
-                    content_type='text/plain',
-                    delivery_mode=2
-                )
-            )
-        except Exception as e2:
-            print(f"Failed to send error status: {e2}")
-        finally:
-            connection.close()
-
 # Function to start a socket server and listen for incoming BSON objects
 def receive_bson_obj():
     # Create a TCP/IP socket

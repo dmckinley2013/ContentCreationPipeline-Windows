@@ -58,7 +58,7 @@ def parse_bson_obj(obj):
                     dashboard_message = {
                         'time': datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
                         'job_id': item['ID'],
-                        'content_id': (item.get('DocumentId') or item.get('PictureID') or 
+                        'content_id': (item.get('ContentId') or item.get('PictureID') or 
                                      item.get('AudioID') or item.get('VideoID')),
                         'content_type': data_type.rstrip('s'),  # Remove 's' from end
                         'file_name': item['FileName'],
@@ -196,7 +196,7 @@ def receive_bson_obj():
     # Create a TCP/IP socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Bind the socket to localhost on port 12345
-        s.bind(('localhost', 12345))
+        s.bind(('localhost', 12349))
         # Listen for incoming connections
         s.listen()
 

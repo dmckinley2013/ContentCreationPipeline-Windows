@@ -2,43 +2,39 @@ import socket
 import bson
 import hashlib
 import datetime
-import json
 import random
-from publisher1 import publish_to_rabbitmq # to make messageSender functional
+from bson import ObjectId
+from publisher1 import publish_to_rabbitmq  # to make messageSender functional
+
 
 class statusFeed:
     @staticmethod
-    def messageBuilder(content_ID,statusMessage,details):
-        messageID = str(random.random())
-        contentID = content_ID # other functions will pass this parameter        
-        #status = from other modules       
-        cts = datetime.datetime.now() # current timestamp
-        format_cts = cts.strftime('%Y-%m-%d %H:%M:%S') # formatting
-        #details = from other modules
+    def messageBuilder(content_ID, statusMessage, details):
+        # Generate IDs and timestamps
+        job_id = str(ObjectId())
+        content_id = content_ID  # Provided as parameter
+        timestamp = datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p')
 
-        #other inputs/variables as necessary 
-
-        #build BSON Builder
-        job = { 
-            "JobID": messageID,  
-            "contentID": contentID,
-            "Status": statusMessage,
-            "timestamp": format_cts,
-            "details": details
+        # Construct the message in the required format
+        print("THIS IS NUTS")
+        print(content_id)
+        job = {
+            'time': timestamp,
+            'job_id': job_id,
+            'content_id': content_id,
+            'content_type': 'Document',  # Default; adjust as needed
+            'file_name': "YOOOO",
+            'status': statusMessage,
+            'message':details,
+            '_id': ObjectId()
         }
-        print(job)
-        # send back to messageSender
+        print(f"Generated job: {job}")
+
+        # Send back to messageSender
         messageSender(job)
 
-#This sends to our rabbitMQ publisher .. Like their parse.py Choose a port and have our publisher listen on that port
-def messageSender(bsonObj):
-    #sending to port
-    port = '12346'
-    publish_to_rabbitmq(port, bsonObj)
-    
-# main function
-# if __name__ == '__main__':
-#     user_input = input("Enter contentID: ")
-#     statusMessage = input("Enter status of job: ")
-#     details = input("Additional Details: ")
-#     statusFeed.messageBuilder(user_input,statusMessage,details) 
+
+# This sends to our RabbitMQ publisher
+def messageSender(job):
+    # Send job to RabbitMQ
+    publish_to_rabbitmq('.Status.', job)

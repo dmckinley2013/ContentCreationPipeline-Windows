@@ -10,22 +10,25 @@ import fitz
 import pika
 from bson import BSON, decode, encode
 import json
-import datetime
+from datetime import datetime
 import random
 import hashlib
 import sys
-from copy import deepcopy  # Import deepcopy if you need a deep copy
+from bson import ObjectId
+from copy import deepcopy  
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../Metadata_Module')))
 
 from analyzer import entityRelationExtraction
 from recNparse import MessageProcessor
 
+# from image_module import ImageProcessor
 FilePath = os.path.dirname(__file__)
 
-def openFile(the_file,file_name):
+def openFile(the_file,file_name,contentID):
     # Pass file to Meta and Convert file to Text
     Meta_file = Meta(the_file,file_name)
-    Text_Summerizer, Keyword = ConvertFile_txt(the_file,file_name)
+    Text_Summerizer, Keyword = ConvertFile_txt(the_file,file_name,contentID)
     return Meta_file, Text_Summerizer, Keyword
 
 def Meta(the_file,file_name):
@@ -38,16 +41,16 @@ def Meta(the_file,file_name):
     with open(FilePath + "/" + 'Meta.txt', 'rb') as f:
         return f
 
-def ConvertFile_txt(the_file,file_name):
+def ConvertFile_txt(the_file,file_name,contentID):
     text_pdf = ''
     with pdfplumber.open(the_file) as pdf:
         for page in pdf.pages:
             text_pdf += page.extract_text()
-    Summerizer_file = Text_Summerizer(text_pdf,file_name)
+    Summerizer_file = Text_Summerizer(text_pdf,file_name,contentID)
     Keyword_file = KeyWord(text_pdf)
     return Summerizer_file, Keyword_file
 
-def Text_Summerizer(text_pdf,file_name):
+def Text_Summerizer(text_pdf,file_name,contentID):
     """
     Summarize the provided text, handling line breaks as separate sentences. 
     Return the summary as an array of sentences, save it to 'summary.txt', and print the sentences.
@@ -97,7 +100,7 @@ def Text_Summerizer(text_pdf,file_name):
     for sentence in summary:
         print(f"- {sentence}")
 
-    entityRelationExtraction.analyze(summary,file_name)
+    entityRelationExtraction.analyze(summary,file_name,contentID)
     
     return summary
 
@@ -237,6 +240,11 @@ def publish_to_rabbitmq(routing_key, message):
     channel = connection.channel()
     
     status_message= message.copy()
+    # if 'Payload' in message:
+    #     del message['Payload']
+
+    # # Log the message without Payload
+    # print("Publishing message without Payload:", message)
     
     if 'PictureID' in status_message:
         status_message['status'] = 'Processed Successfully in Document Module'
@@ -267,9 +275,19 @@ def publish_to_rabbitmq(routing_key, message):
         print("ContentID is missing from the status_message.")
 
     status_message=encode(status_message)
-    
+    peek = message.copy()
+    del peek['Payload']
+    print("Publishing message without Payload:", peek)
+
     # Serialize the message to BSON
     message = encode(message)
+    
+
+    # if 'Payload' in message:
+    #     del message['Payload']
+
+    # Log the message without Payload
+    
     
     # Publish the message to the specified routing key
     channel.basic_publish(
@@ -321,7 +339,7 @@ def compute_unique_id(data_object):
     data_str = str(encode(data_object))
     
     # Append the current date and time
-    current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
     
     combined_data = data_str + current_time + str(random.random())
     
@@ -350,12 +368,13 @@ def on_message_received(ch, method, properties, body):
             f.write(body['Payload'])
 
         #open the file and convert it to text
-        Meta_file, Text_Summerizer, Keyword = openFile(FilePath + "/" + body['FileName'], body['FileName'])
+        Meta_file, Text_Summerizer, Keyword = openFile(FilePath + "/" + body['FileName'], body['FileName'],body['ContentId'])
         
         # Generate ContentId if it doesn't exist
-        if 'ContentId' not in body:
-            body['ContentId'] = compute_unique_id(body)
-            print(f"Generated new ContentId: {body['ContentId']}")
+        # if 'ContentId' not in body:
+        #     body['ContentId'] = compute_unique_id(body)
+        #     print(f"Generated new ContentId: {body['ContentId']}")
+            
             
         Image_file = IteratePDF(FilePath + "/" + body['FileName'],body['ContentId'])
 
@@ -367,10 +386,14 @@ def on_message_received(ch, method, properties, body):
                 with open(FilePath + "/images/" + file, 'rb') as f:
                     image_payload = f.read()
                     image = {
-                        "ID": body['ID'],
-                        "ContentId": body['ContentId'],
-                        "PictureType": ext,  # Set the value to the file extension
-                        "FileName": file,
+                        "time": datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
+                        "job_id": body['ID'],
+                        "content_id": body['ContentId'],
+                        "content_type": "Image",
+                        "file_name": file,
+                        "status": "Processed",
+                        "message": f"Image file '{file}' successfully sent to Image queue",
+                        "_id": ObjectId(),
                         "Payload": image_payload
                     }
                     image['PictureID'] = compute_unique_id(image)
@@ -409,10 +432,19 @@ def on_message_received(ch, method, properties, body):
         #send the document to the next module
         contentID = publish_to_rabbitmq('.Store.', body)
         processor = MessageProcessor()
+        processor.consume_store(contentID)
+        
+        processor1 = MessageProcessor()
+        processor1.consume_image(contentID)
+
+        
 
     # Example usage: consume from the Store queue
     
-        processor.consume_store(contentID)
+      
+        # processorImage = ImageProcessor(contentID)
+        # processorImage.consume_image()
+
         #CALL IMAGE MODULE WITH CONTENT ID  
         # processor.image_store(contentID)
         #remove the files

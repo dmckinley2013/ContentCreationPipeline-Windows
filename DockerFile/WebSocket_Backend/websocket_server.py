@@ -4,7 +4,7 @@ import json
 import pika
 from bson import BSON, ObjectId
 from db_handler import DBHandler
-
+from datetime import datetime
 class WebSocketServer:
     def __init__(self):
         self.connected_clients = set()
@@ -23,7 +23,7 @@ class WebSocketServer:
                 return {
                     'time': data.get('time', datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p')),
                     'job_id': data.get('ID'),
-                    'content_id': data.get('DocumentId') or data.get('PictureID') or data.get('AudioID'),
+                    'content_id': data.get('ContentId') or data.get('PictureID') or data.get('AudioID'),
                     'content_type': self._determine_content_type(data),
                     'file_name': data.get('FileName'),
                     'status': 'Processed',

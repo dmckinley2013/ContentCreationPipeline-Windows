@@ -62,7 +62,7 @@ def nodesRelation():
         # Ensure the driver is closed
         driver.close()
 
-def nodeTraceback(learnerObject):
+def nodeTraceback(learnerObject,contentID):
     driver = GraphDatabase.driver(URI, auth=AUTH)
     with driver.session() as session:
         # The node to look for is passed as a parameter
@@ -116,10 +116,10 @@ def nodeTraceback(learnerObject):
                         printed_relationships.add((relationship_key, relationshipType))
                         
                         relationMessage.append(relationship_string)
-        
-        print(relationMessage)
+        relationMessageString = ', '.join(relationMessage)
+        print(relationMessageString)
         print("STATUS FEED CALLED HERE")
-        statusFeed.messageBuilder(nodeToLookFor,"Nodes and relations have been stored to Neo4j ", relationMessage)        
+        statusFeed.messageBuilder(contentID,"Nodes and relations have been stored to Neo4j ", relationMessageString)        
 
 
         if not found_any:
@@ -373,6 +373,11 @@ class nodeBuilder:
             # updateNodes()
             # getAllNodes()
             # nodesArray = [nodes.split(",") for nodes in store_relationship()]
+
+        contentID = package[0]
+        del package[0] 
+        print("CONTENT MAN")
+        print(contentID)    
         learnerObject = package[0][0] #tracing the PDF 
      
         node1array = package[0]
@@ -407,7 +412,7 @@ class nodeBuilder:
             # Update size after modifying package
             size = len(package)
         
-        nodeTraceback(learnerObject)
+        nodeTraceback(learnerObject,contentID)
 
              
             

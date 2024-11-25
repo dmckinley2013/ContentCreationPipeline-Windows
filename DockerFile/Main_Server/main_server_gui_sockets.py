@@ -3,7 +3,7 @@ from tkinter import ttk, filedialog, messagebox
 import socket
 from bson import BSON,encode,decode
 import hashlib
-import datetime
+from datetime import datetime
 import json
 import random
 from pathlib import Path
@@ -256,7 +256,7 @@ class FileUploaderGUI:
 
     def compute_unique_id(self, data_object):
         data_str = str(encode(data_object))
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         combined_data = data_str + current_time + str(random.random())
         return hashlib.sha256(combined_data.encode()).hexdigest()
 
@@ -264,11 +264,11 @@ class FileUploaderGUI:
         job["ID"] = self.compute_unique_id(job)
         if job["NumberOfDocuments"] > 0:
             for document in job["Documents"]:
-                document["ContentId"] = job["ID"]
-                document["DocumentId"] = self.compute_unique_id(document)
+                document["DocumentId"] = job["ID"]
+                document["ContentId"] = self.compute_unique_id(document)
         if job["NumberOfImages"] > 0:
             for image in job["Images"]:
-                image["ID"] = job["ID"]
+                image["ID"] = job["ID"] 
                 image["ContentId"] = job["ID"]
         if job["NumberOfAudio"] > 0:
             for audio in job["Audio"]:
@@ -282,13 +282,26 @@ class FileUploaderGUI:
 
     def send_bson_obj(self, job):
         try:
+            # Create a deep copy of the job without the Payload for debugging
+            debug_job = json.loads(json.dumps(job, default=str))  # Convert to JSON-serializable format
+            for section in ['Documents', 'Images', 'Audio', 'Video']:
+                if section in debug_job and debug_job[section]:
+                    for item in debug_job[section]:
+                        item['Payload'] = '[Payload excluded]'  # Replace payload with placeholder
+
+            # Print the debug-friendly job for inspection
+            print("Message body to be sent (excluding Payload):", debug_job)
+
+            # Encode the original job as BSON and send it over the socket
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(("localhost", 12345))
+            s.connect(("localhost", 12349))
             s.sendall(encode(job))
             s.close()
             return True
         except Exception as e:
             return str(e)
+
+
 
     def upload_files(self):
         # Check if at least one file is selected

@@ -45,14 +45,14 @@ def create_type_based_relation_extractor(nlp, name):
     return TypeBasedRelationExtractor()
 
 # Load the trained NER model and add the relationship extractor
-nlp = spacy.load("Z:\BuildingTheDashboardModule_Group18-2\DockerFile\Metadata_Module\custom_ner_modelREL") #change to your custom directory
+nlp = spacy.load("/Users/mch/Documents/Metadata-Module/metadata-module/DockerFile/Metadata_Module/custom_ner_modelREL") #change to your custom directory
 nlp.add_pipe("type_based_relation_extractor", last=True)
 
 
 class entityRelationExtraction:
 
     
-    def analyze(sentences,file_name):
+    def analyze(sentences,file_name,contentID):
         print("analyze() called from:")
         traceback.print_stack()  # This will show the call stack leading to analyze
         print(sentences)
@@ -140,6 +140,7 @@ class entityRelationExtraction:
         nodesUnique.insert(0, main_topic_node_copy)
         nodesUnique.insert(0, learnerRelation)
         nodesUnique.insert(0, learnerNode)
+        nodesUnique.insert(0,contentID)
 
         print(nodesUnique)
         

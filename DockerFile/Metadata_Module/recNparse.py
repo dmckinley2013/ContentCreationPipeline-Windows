@@ -2,6 +2,9 @@ import pika
 from bson import BSON, decode, encode
 import os
 import logging
+from bson.errors import BSONError
+
+
 
 # Setup logging
 logging.basicConfig(
@@ -83,7 +86,7 @@ class MessageProcessor:
                 logging.info(
                     f"Skipping store message with non-matching Content ID: {message_content_id}"
                 )
-                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                ch.basic_nack(delivery_tag=method.delivey_tag, requeue=True)
                 return
 
             logging.info(
@@ -110,7 +113,7 @@ class MessageProcessor:
         except KeyError as e:
             logging.error(f"Missing key in store message: {str(e)}")
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-        except BSON.errors.BSONError:
+        except BSONError as e:
             logging.error("Failed to decode BSON message for store")
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
         except Exception as e:
@@ -121,44 +124,63 @@ class MessageProcessor:
     def process_image(self, ch, method, properties, body, content_id):
         try:
             obj = decode(body)
-            message_content_id = obj["ContentId"]
-            file_name = obj["FileName"]
+            message_content_id = obj["content_id"]
+            file_name = obj["file_name"]
 
             if message_content_id != content_id:
                 logging.info(
-                    f"Skipping image with non-matching content ID: {message_content_id}"
+                    f"Skipping image with non-matching Content ID: {message_content_id}"
                 )
-                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                # Do not send ack; requeue message implicitly by not acking
                 return
 
-            image_file_name = f"image_{file_name}+{message_content_id}"
-            self.save_file(os.path.join(self.current_folder, image_file_name), obj["Payload"])
+            # Create or use the directory store_<contentID>
+            target_folder = f"store_{content_id}"
+            os.makedirs(target_folder, exist_ok=True)
 
-            logging.info(f"Processed image with content ID: {message_content_id}")
+            # Save the file in the target folder
+            image_file_name = f"image_{file_name}+{message_content_id}.png"
+            self.save_file(os.path.join(target_folder, image_file_name), obj["Payload"])
+
+            logging.info(f"Processed image with Content ID: {message_content_id}")
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
         except KeyError as e:
             logging.error(f"Missing key in image message: {str(e)}")
-            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-        except BSON.errors.BSONError:
-            logging.error("Failed to decode BSON message for image")
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
         except Exception as e:
             logging.error(f"Error processing image message: {str(e)}")
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
 
 
+
+
     def consume_image(self, contentID):
         logging.info(f"Starting to consume messages from the Image queue with Content ID: {contentID}")
         
-        # Use a lambda to pass contentID to process_image
-        self.channel.basic_consume(
-            queue=self.queues["image"],
-            on_message_callback=lambda ch, method, properties, body: self.process_image(
-                ch, method, properties, body, contentID
-            ),
-        )
-        self.channel.start_consuming()
+        seen_tags = set()  # To track delivery tags of seen messages
+        while True:
+            method_frame, properties, body = self.channel.basic_get(queue=self.queues["image"], auto_ack=False)
+
+            if not method_frame:
+                logging.info("No more messages in the queue. Stopping consumption.")
+                break
+
+            # Detect repetition by checking the delivery tag
+            if method_frame.delivery_tag in seen_tags:
+                logging.info("Repeated message detected. Stopping consumption.")
+                break
+            seen_tags.add(method_frame.delivery_tag)
+
+            # Process the message
+            try:
+                self.process_image(self.channel, method_frame, properties, body, contentID)
+            except Exception as e:
+                logging.error(f"Error processing message: {e}")
+                # You can optionally nack here, requeue if needed
+                self.channel.basic_nack(delivery_tag=method_frame.delivery_tag, requeue=True)
+                continue
+
 
     def consume_store(self, content_id):
         logging.info(f"Starting to consume messages from the Store queue with Content ID: {content_id}")
@@ -184,7 +206,7 @@ if __name__ == "__main__":
     processor = MessageProcessor()
 
     # Example usage: consume from the Store queue
-    processor.consume_store()
+    processor.consume_image()
 
     # Example usage: consume from the Image queue
     # processor.consume_image()

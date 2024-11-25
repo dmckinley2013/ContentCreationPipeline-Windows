@@ -8,7 +8,7 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 # Define the commands with their respective directories
 commands = [
     ("docker-compose up --build -d", base_dir),
-    ("python parse.py", os.path.join(base_dir, "Parser_Module")),
+    # ("python parse.py", os.path.join(base_dir, "Parser_Module")),
     ("python publisher1.py", os.path.join(base_dir, "Metadata_Module")),
     ("node server.js", os.path.join(base_dir, "WebSocket_Backend")),
     ("python websocket_server.py", os.path.join(base_dir, "WebSocket_Backend")),
@@ -55,7 +55,7 @@ try:
     run_command("docker-compose up --build -d", base_dir, wait_time=45)
 
     # Run the rest of the commands in sequence
-    run_command("python parse.py", os.path.join(base_dir, "Parser_Module"))
+    # run_command("python parse.py", os.path.join(base_dir, "Parser_Module"))
     run_command("python publisher1.py", os.path.join(base_dir, "Metadata_Module"))
     run_command("node server.js", os.path.join(base_dir, "WebSocket_Backend"))
     run_command("python websocket_server.py", os.path.join(base_dir, "WebSocket_Backend"))
