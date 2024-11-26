@@ -206,7 +206,7 @@ class FileUploaderGUI:
                 with open(filename, "rb") as f:
                     self.job["Documents"] = [
                         {
-                            "ID": "ObjectID",
+                            "ID": "ObjectID2",
                             "ContentId": "ObjectID",
                             "DocumentType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
@@ -266,10 +266,11 @@ class FileUploaderGUI:
             for document in job["Documents"]:
                 document["DocumentId"] = job["ID"]
                 document["ContentId"] = self.compute_unique_id(document)
+                document["ID"] = job["ID"]
         if job["NumberOfImages"] > 0:
             for image in job["Images"]:
                 image["ID"] = job["ID"] 
-                image["ContentId"] = job["ID"]
+                image["ContentId"] = self.compute_unique_id(image)
         if job["NumberOfAudio"] > 0:
             for audio in job["Audio"]:
                 audio["ContentId"] = job["ID"]

@@ -7,14 +7,14 @@ const Dashboard = () => {
     const [isConnected, setIsConnected] = useState(false);
     const ws = useRef(null);
 
-    const [expandedJobIds, setExpandedJobIds] = useState([]);
+    const [expandedContentIds, setExpandedContentIds] = useState([]);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [selectedContentType, setSelectedContentType] = useState('All');
 
-    // Helper function to truncate Content IDs
+    // Helper function to truncate IDs
     const truncateId = (id) => {
         if (!id) return '';
         return id.length > 10 ? `...${id.slice(-10)}` : id;
@@ -24,16 +24,17 @@ const Dashboard = () => {
         return type === 'Picture' ? 'Image' : type;
     };
 
+    // Group messages by content_id
     const groupedMessages = messages.reduce((acc, msg) => {
-        const jobId = msg.job_id;
-        if (!acc[jobId]) {
-            acc[jobId] = [];
+        const contentId = msg.content_id;
+        if (!acc[contentId]) {
+            acc[contentId] = [];
         }
-        acc[jobId].push(msg);
+        acc[contentId].push(msg);
         return acc;
     }, {});
 
-    // Sort jobs by the latest timestamp in their content
+    // Sort content groups by the latest timestamp
     const sortedGroupedMessages = Object.entries(groupedMessages).sort((a, b) => {
         const getLastTimestamp = (msgs) => {
             return Math.max(...msgs.map(msg => new Date(msg.time).getTime() || 0));
@@ -42,9 +43,9 @@ const Dashboard = () => {
     });
 
     // Filter messages based on search term and content type
-    const filteredJobs = sortedGroupedMessages.filter(([jobId, msgs]) => {
-        const matchesSearch = jobId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            msgs.some(msg => Object.values(msg).some(value => 
+    const filteredContent = sortedGroupedMessages.filter(([contentId, msgs]) => {
+        const matchesSearch = contentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            msgs.some(msg => Object.values(msg).some(value =>
                 value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
             ));
         
@@ -54,11 +55,11 @@ const Dashboard = () => {
         return matchesSearch && matchesContentType;
     });
 
-    // Pagination calculations based on job_id
-    const indexOfLastJob = currentPage * itemsPerPage;
-    const indexOfFirstJob = indexOfLastJob - itemsPerPage;
-    const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
-    const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+    // Pagination calculations
+    const indexOfLastContent = currentPage * itemsPerPage;
+    const indexOfFirstContent = indexOfLastContent - itemsPerPage;
+    const currentContent = filteredContent.slice(indexOfFirstContent, indexOfLastContent);
+    const totalPages = Math.ceil(filteredContent.length / itemsPerPage);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -79,7 +80,7 @@ const Dashboard = () => {
                     console.log('WebSocket data received:', data);
 
                     if (data.type === 'initialMessages') {
-                        setMessages(prevMessages => [...data.data]);
+                        setMessages([...data.data]);
                         setLoading(false);
                     } else if (data.type === 'newMessage') {
                         setMessages(prevMessages => [data.data, ...prevMessages]);
@@ -110,9 +111,9 @@ const Dashboard = () => {
         };
     }, []);
 
-    const toggleExpandJobId = (jobId) => {
-        setExpandedJobIds((prevExpanded) => 
-            prevExpanded.includes(jobId) ? prevExpanded.filter(id => id !== jobId) : [...prevExpanded, jobId]
+    const toggleExpandContentId = (contentId) => {
+        setExpandedContentIds((prevExpanded) =>
+            prevExpanded.includes(contentId) ? prevExpanded.filter(id => id !== contentId) : [...prevExpanded, contentId]
         );
     };
 
@@ -168,7 +169,7 @@ const Dashboard = () => {
                         <div className="search-bar">
                             <input
                                 type="text"
-                                placeholder="Search by Job ID, Content ID, etc..."
+                                placeholder="Search by Content ID, Job ID, etc..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="search-input"
@@ -190,9 +191,9 @@ const Dashboard = () => {
                                 onChange={(e) => setItemsPerPage(Number(e.target.value))}
                                 className="page-size-select"
                             >
-                                <option value={10}>10 Jobs per page</option>
-                                <option value={25}>25 Jobs per page</option>
-                                <option value={50}>50 Jobs per page</option>
+                                <option value={10}>10 Items per page</option>
+                                <option value={25}>25 Items per page</option>
+                                <option value={50}>50 Items per page</option>
                             </select>
                         </div>
                     </div>
@@ -201,9 +202,9 @@ const Dashboard = () => {
                         <table className="dashboard-table">
                             <thead>
                                 <tr>
+                                    <th>Content ID</th>
                                     <th>Job ID</th>
                                     <th>Time</th>
-                                    <th>Content ID</th>
                                     <th>Content Type</th>
                                     <th>File Name</th>
                                     <th>Status</th>
@@ -220,25 +221,23 @@ const Dashboard = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : currentJobs.length > 0 ? (
-                                    currentJobs.map(([jobId, msgs]) => (
-                                        <React.Fragment key={jobId}>
+                                ) : currentContent.length > 0 ? (
+                                    currentContent.map(([contentId, msgs]) => (
+                                        <React.Fragment key={contentId}>
                                             <tr 
-                                                className="job-row" 
-                                                onClick={() => toggleExpandJobId(jobId)}
+                                                className="content-row" 
+                                                onClick={() => toggleExpandContentId(contentId)}
                                             >
-                                                <td>{jobId}</td>
-                                                <td colSpan="6" className="expand-cell">
-                                                    {expandedJobIds.includes(jobId) ? '▼' : '▶'}
+                                                <td>{contentId}</td>
+                                                <td colSpan="6" className="id-cell">
+                                                    {expandedContentIds.includes(contentId) ? '▼' : '▶'}
                                                 </td>
                                             </tr>
-                                            {expandedJobIds.includes(jobId) && msgs.map((msg, index) => (
-                                                <tr key={`${msg.content_id}-${index}`} className="content-row">
+                                            {expandedContentIds.includes(contentId) && msgs.map((msg, index) => (
+                                                <tr key={`${msg.job_id}-${index}`} className="job-row">
                                                     <td></td>
+                                                    <td>{truncateId(msg.job_id)}</td>
                                                     <td>{msg.time}</td>
-                                                    <td title={msg.content_id} className="id-cell">
-                                                        {truncateId(msg.content_id)}
-                                                    </td>
                                                     <td>
                                                         <span className={`content-type ${normalizeContentType(msg.content_type).toLowerCase()}`}>
                                                             {normalizeContentType(msg.content_type)}
@@ -257,7 +256,7 @@ const Dashboard = () => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="7">No jobs found</td>
+                                        <td colSpan="7">No content found</td>
                                     </tr>
                                 )}
                             </tbody>
