@@ -119,7 +119,7 @@ def nodeTraceback(learnerObject,contentID):
         relationMessageString = ', '.join(relationMessage)
         print(relationMessageString)
         print("STATUS FEED CALLED HERE")
-        statusFeed.messageBuilder(contentID,"Nodes and relations have been stored to Neo4j ", relationMessageString)        
+        statusFeed.messageBuilder(learnerObject,contentID,"Nodes and relations have been stored to Neo4j ", relationMessageString)        
 
 
         if not found_any:
@@ -246,7 +246,7 @@ def addLearnerRelation(node1array, relation, node2array):
         learnerObject = node1array[1]
         mediaType = node1array[2]
         location = "TEST"
-        contentID = "TEST"
+        contentID = node1array[3]
 
         primaryType2 = node2array[1]
         secondaryType2 = node2array[2]
@@ -379,8 +379,9 @@ class nodeBuilder:
         print("CONTENT MAN")
         print(contentID)    
         learnerObject = package[0][0] #tracing the PDF 
-     
+        
         node1array = package[0]
+        node1array.append(contentID)
         # print(node1array)
         relation = package[1][0]
         # print(relation)

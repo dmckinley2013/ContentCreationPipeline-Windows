@@ -9,7 +9,7 @@ from publisher1 import publish_to_rabbitmq  # to make messageSender functional
 
 class statusFeed:
     @staticmethod
-    def messageBuilder(content_ID, statusMessage, details):
+    def messageBuilder(learnerObjectFile,content_ID, statusMessage, details):
         # Generate IDs and timestamps
         job_id = str(ObjectId())
         content_id = content_ID  # Provided as parameter
@@ -22,8 +22,9 @@ class statusFeed:
             'time': timestamp,
             'job_id': job_id,
             'content_id': content_id,
-            'content_type': 'Document',  # Default; adjust as needed
-            'file_name': "YOOOO",
+            'media_id': "N/A",
+            'content_type': 'Status Message',  # Default; adjust as needed
+            'file_name': learnerObjectFile,
             'status': statusMessage,
             'message':details,
             '_id': ObjectId()

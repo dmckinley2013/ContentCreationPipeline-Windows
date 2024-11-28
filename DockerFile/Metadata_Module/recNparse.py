@@ -78,7 +78,7 @@ class MessageProcessor:
     def process_store(self, ch, method, properties, body, content_id):
         try:
             obj = decode(body)
-            message_content_id = obj["ContentId"]
+            message_content_id = obj["content_id"]
             file_name = obj["FileName"]
 
             # Check if the ContentId matches

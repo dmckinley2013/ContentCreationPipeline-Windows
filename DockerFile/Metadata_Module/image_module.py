@@ -108,3 +108,8 @@ def consumer_connection(routing_key):
 
 if __name__ == "__main__":
     consumer_connection('Image')
+
+#Integration Plan 
+#DOES NOT PROCESS standalone images - Because it is generic classification 
+#only processes images from Document - stores the image  as a learner object and attaches to learner object where it came from and stores predicted
+#class and confidence score.  

@@ -58,8 +58,9 @@ def parse_bson_obj(obj):
                     dashboard_message = {
                         'time': datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
                         'job_id': item['ID'],
-                        'content_id': (item.get('ContentId') or item.get('PictureID') or 
-                                     item.get('AudioID') or item.get('VideoID')),
+                        'content_id': item.get('content_id'),
+                        'media_id': item.get('DocumentId') or item.get('PictureID') or 
+                                     item.get('AudioID') or item.get('VideoID'),
                         'content_type': data_type.rstrip('s'),  # Remove 's' from end
                         'file_name': item['FileName'],
                         'status': 'Processed',

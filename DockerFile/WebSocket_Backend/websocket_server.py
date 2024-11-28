@@ -20,11 +20,14 @@ class WebSocketServer:
         elif isinstance(data, dict):
             # Convert the message to the expected format
             if 'ID' in data:
+                print("PIC PRINTED HERE")
+                print(data.get('PictureID'))
                 return {
                     'time': data.get('time', datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p')),
                     'job_id': data.get('ID'),
-                    'content_id': data.get('ContentId') or data.get('PictureID') or data.get('AudioID'),
+                    'content_id': data.get('content_id'),
                     'content_type': self._determine_content_type(data),
+                    'media_id': data.get('DocumentId') or data.get('PictureID') or data.get('AudioID') or data.get('VideoID'),
                     'file_name': data.get('FileName'),
                     'status': 'Processed',
                     'message': self._generate_message(data)

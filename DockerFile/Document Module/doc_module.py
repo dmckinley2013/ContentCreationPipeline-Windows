@@ -247,8 +247,12 @@ def publish_to_rabbitmq(routing_key, message):
     # print("Publishing message without Payload:", message)
     
     if 'PictureID' in status_message:
+        print("PICTUREIB")
+        print(status_message['PictureID'])
         status_message['status'] = 'Processed Successfully in Document Module'
         status_message['Message'] = 'Message has been Processed and sent to the Image Queue'
+        
+       
         del status_message['Payload']
     else:
         status_message['Status'] = 'Processed Successfully in Document Module'
@@ -268,7 +272,7 @@ def publish_to_rabbitmq(routing_key, message):
                 "Message": "Message has been Processed and sent to the Store Queue"
             }
         '''
-    contentIDtoSend = message.get('ContentId')
+    contentIDtoSend = message.get('content_id')
     if contentIDtoSend:
         print("Content ID before calling receiver:", contentIDtoSend)
     else:
@@ -368,15 +372,12 @@ def on_message_received(ch, method, properties, body):
             f.write(body['Payload'])
 
         #open the file and convert it to text
-        Meta_file, Text_Summerizer, Keyword = openFile(FilePath + "/" + body['FileName'], body['FileName'],body['ContentId'])
+        Meta_file, Text_Summerizer, Keyword = openFile(FilePath + "/" + body['FileName'], body['FileName'],body['content_id'])
         
-        # Generate ContentId if it doesn't exist
-        # if 'ContentId' not in body:
-        #     body['ContentId'] = compute_unique_id(body)
-        #     print(f"Generated new ContentId: {body['ContentId']}")
+      
             
             
-        Image_file = IteratePDF(FilePath + "/" + body['FileName'],body['ContentId'])
+        Image_file = IteratePDF(FilePath + "/" + body['FileName'],body['content_id'])
 
 
         if Image_file > 0:
@@ -387,8 +388,9 @@ def on_message_received(ch, method, properties, body):
                     image_payload = f.read()
                     image = {
                         "time": datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p'),
-                        "job_id": body['ID'],
-                        "content_id": body['ContentId'],
+                        # "job_id": body['ID'],
+                        "content_id": body['content_id'],
+                        
                         "content_type": "Image",
                         "file_name": file,
                         "status": "Processed",
@@ -397,6 +399,8 @@ def on_message_received(ch, method, properties, body):
                         "Payload": image_payload
                     }
                     image['PictureID'] = compute_unique_id(image)
+                    image['media_id'] = image['PictureID']
+                    image['job_id'] = compute_unique_id(image)
                     #send the image to the next module
                     publish_to_rabbitmq('.Image.', image)
         else:

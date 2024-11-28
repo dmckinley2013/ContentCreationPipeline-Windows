@@ -6,6 +6,8 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [isConnected, setIsConnected] = useState(false);
     const ws = useRef(null);
+    const [truncatedContentIds, setTruncatedContentIds] = useState({});
+
 
     const [expandedContentIds, setExpandedContentIds] = useState([]);
 
@@ -113,9 +115,20 @@ const Dashboard = () => {
 
     const toggleExpandContentId = (contentId) => {
         setExpandedContentIds((prevExpanded) =>
-            prevExpanded.includes(contentId) ? prevExpanded.filter(id => id !== contentId) : [...prevExpanded, contentId]
+            prevExpanded.includes(contentId)
+                ? prevExpanded.filter((id) => id !== contentId)
+                : [...prevExpanded, contentId]
         );
     };
+    
+    
+    //     // Truncate the contentId and store it in state
+    //     setTruncatedContentIds((prevTruncated) => ({
+    //         ...prevTruncated,
+    //         [contentId]: contentId.includes('.') ? contentId.split('.')[0] : contentId,
+    //     }));
+    // };
+    
 
     return (
         <div className="dashboard-wrapper">
@@ -207,59 +220,86 @@ const Dashboard = () => {
                                     <th>Time</th>
                                     <th>Content Type</th>
                                     <th>File Name</th>
+                                    <th> Media ID</th>
                                     <th>Status</th>
                                     <th>Message</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {loading ? (
+    {loading ? (
+        <tr>
+            <td colSpan="7">
+                <div className="loading-spinner">
+                    <div className="spinner"></div>
+                    <p>Loading messages...</p>
+                </div>
+            </td>
+        </tr>
+    ) : currentContent.length > 0 ? (
+        currentContent.map(([contentId, msgs]) => (
+            <React.Fragment key={contentId}>
+                {/* Main row for Content ID */}
+                <tr 
+                    className="content-row" 
+                    onClick={() => toggleExpandContentId(contentId)}
+                 >
+                    {/* <td>{expandedContentIds.includes(contentId) ? (contentId.includes('.') ? contentId.split('.')[0] : contentId) : contentId}</td> */}
+                    <td>{expandedContentIds.includes(contentId) ?  contentId : contentId}</td>
+                    <td colSpan="6" className="id-cell">
+                        {expandedContentIds.includes(contentId) ? '▼' : '▶'}
+                    </td>
+                </tr>
+
+                {/* Expanded content rows */}
+                {expandedContentIds.includes(contentId) && (
+                    <tr className="expanded-row">
+                        <td colSpan="7">
+                            <table className="expanded-table">
+                                <thead>
                                     <tr>
-                                        <td colSpan="7">
-                                            <div className="loading-spinner">
-                                                <div className="spinner"></div>
-                                                <p>Loading messages...</p>
-                                            </div>
-                                        </td>
+                                        <th>Job ID</th>
+                                        <th>Time</th>
+                                        <th>Content Type</th>
+                                        <th>File Name</th>
+                                        <th>Media ID</th>
+                                        <th>Status</th>
+                                        <th>Message</th>
                                     </tr>
-                                ) : currentContent.length > 0 ? (
-                                    currentContent.map(([contentId, msgs]) => (
-                                        <React.Fragment key={contentId}>
-                                            <tr 
-                                                className="content-row" 
-                                                onClick={() => toggleExpandContentId(contentId)}
-                                            >
-                                                <td>{contentId}</td>
-                                                <td colSpan="6" className="id-cell">
-                                                    {expandedContentIds.includes(contentId) ? '▼' : '▶'}
-                                                </td>
-                                            </tr>
-                                            {expandedContentIds.includes(contentId) && msgs.map((msg, index) => (
-                                                <tr key={`${msg.job_id}-${index}`} className="job-row">
-                                                    <td></td>
-                                                    <td>{truncateId(msg.job_id)}</td>
-                                                    <td>{msg.time}</td>
-                                                    <td>
-                                                        <span className={`content-type ${normalizeContentType(msg.content_type).toLowerCase()}`}>
-                                                            {normalizeContentType(msg.content_type)}
-                                                        </span>
-                                                    </td>
-                                                    <td>{msg.file_name}</td>
-                                                    <td>
-                                                        <span className={`status ${msg.status.toLowerCase()}`}>
-                                                            {msg.status}
-                                                        </span>
-                                                    </td>
-                                                    <td>{msg.message}</td>
-                                                </tr>
-                                            ))}
-                                        </React.Fragment>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="7">No content found</td>
-                                    </tr>
-                                )}
-                            </tbody>
+                                </thead>
+                                <tbody>
+                                    {msgs.map((msg, index) => (
+                                        <tr key={`${msg.job_id}-${index}`}>
+                                            <td>{truncateId(msg.job_id)}</td>
+                                            <td>{msg.time}</td>
+                                            <td>
+                                                <span className={`content-type ${normalizeContentType(msg.content_type).toLowerCase()}`}>
+                                                    {normalizeContentType(msg.content_type)}
+                                                </span>
+                                            </td>
+                                            <td>{msg.file_name}</td>
+                                            <td>{truncateId(msg.media_id)}</td>
+                                            <td>
+                                                <span className={`status ${msg.status.toLowerCase()}`}>
+                                                    {msg.status}
+                                                </span>
+                                            </td>
+                                            <td>{msg.message}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                )}
+            </React.Fragment>
+        ))
+    ) : (
+        <tr>
+            <td colSpan="7">No content found</td>
+        </tr>
+    )}
+</tbody>
+
                         </table>
 
                         <div className="pagination">

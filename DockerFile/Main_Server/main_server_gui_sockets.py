@@ -206,8 +206,8 @@ class FileUploaderGUI:
                 with open(filename, "rb") as f:
                     self.job["Documents"] = [
                         {
-                            "ID": "ObjectID2",
-                            "ContentId": "ObjectID",
+                            "ID": "ObjectID",
+                            "content_id": "ObjectID",
                             "DocumentType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -220,7 +220,7 @@ class FileUploaderGUI:
                     self.job["Images"] = [
                         {
                             "ID": "ObjectID",
-                            "ContentId": "ObjectID",
+                            "content_id": "ObjectID",
                             "PictureType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -232,7 +232,7 @@ class FileUploaderGUI:
                     self.job["Audio"].append(
                         {
                             "ID": "ObjectID",
-                            "ContentId": "ObjectID",
+                            "content_id": "ObjectID",
                             "AudioType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -264,21 +264,28 @@ class FileUploaderGUI:
         job["ID"] = self.compute_unique_id(job)
         if job["NumberOfDocuments"] > 0:
             for document in job["Documents"]:
-                document["DocumentId"] = job["ID"]
-                document["ContentId"] = self.compute_unique_id(document)
                 document["ID"] = job["ID"]
+                document["DocumentId"] = self.compute_unique_id(document)
+                document["content_id"] = document['FileName']+ "_" + self.compute_unique_id(document) 
+                #This is the content_id; This id identifies any other media extracted from this piece of content,
+                # think Images and summaries they will have the same content_id but will have respective Id's such as DocumentId, PictureID, AudioID and so on. 
+                # These display on the dashboard as media_id for streamlined message storage. If you need to acces these properties they can still be accessed by Body['DocumentId'] or item.get('DocumentId')  
+                
         if job["NumberOfImages"] > 0:
             for image in job["Images"]:
-                image["ID"] = job["ID"] 
-                image["ContentId"] = self.compute_unique_id(image)
+                image["ID"] = job["ID"]
+                image['PictureID'] = self.compute_unique_id(image) 
+                image["content_id"] = image['FileName']+ "_" + self.compute_unique_id(image)
         if job["NumberOfAudio"] > 0:
             for audio in job["Audio"]:
-                audio["ContentId"] = job["ID"]
+                audio['ID'] = job['ID']                
                 audio["AudioID"] = self.compute_unique_id(audio)
+                audio["content_id"] = audio['FileName']+ "_" + self.compute_unique_id(audio)
         if job["NumberOfVideo"] > 0:
             for video in job["Video"]:
                 video["ID"] = job["ID"]
                 video["VideoID"] = self.compute_unique_id(video)
+                video["content_id"] = video['FileName']+ "_" + self.compute_unique_id(video)
         return job
 
     def send_bson_obj(self, job):
