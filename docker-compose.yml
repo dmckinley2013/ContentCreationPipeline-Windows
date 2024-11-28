@@ -50,3 +50,36 @@ services:
       rabbitmq_tshark:
         condition: service_healthy
     command: ["python", "setup.py"]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # Add healthcheck to ensure service is running properly
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Ensure container automatically restarts if it crashes
+    restart: unless-stopped
+    # Increase shared memory for better performance
+    shm_size: '2gb'
+    # Add environment variables for configuration
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+
+volumes:
+  ollama:
+    name: ollama_data

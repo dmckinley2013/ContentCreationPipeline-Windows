@@ -40,3 +40,5 @@ node_modules/
 
 custom_ner_modelREL/
 **/custom_ner_modelREL/
+
+**store_**

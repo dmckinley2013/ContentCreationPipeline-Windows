@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import socket
-from bson import BSON,encode,decode
+from bson import BSON, encode, decode
 import hashlib
-from datetime import datetime
+import datetime
 import json
 import random
 from pathlib import Path
@@ -33,7 +33,7 @@ class FileUploaderGUI:
         }
 
         self.create_widgets()
-    
+
     def create_widgets(self):
         # Main frame
         main_frame = ttk.Frame(self.root, padding="20")
@@ -207,7 +207,7 @@ class FileUploaderGUI:
                     self.job["Documents"] = [
                         {
                             "ID": "ObjectID",
-                            "content_id": "ObjectID",
+                            "ContentId": "ObjectID",
                             "DocumentType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -220,7 +220,7 @@ class FileUploaderGUI:
                     self.job["Images"] = [
                         {
                             "ID": "ObjectID",
-                            "content_id": "ObjectID",
+                            "ContentId": "ObjectID",
                             "PictureType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -232,7 +232,7 @@ class FileUploaderGUI:
                     self.job["Audio"].append(
                         {
                             "ID": "ObjectID",
-                            "content_id": "ObjectID",
+                            "ContentId": "ObjectID",
                             "AudioType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -256,7 +256,7 @@ class FileUploaderGUI:
 
     def compute_unique_id(self, data_object):
         data_str = str(encode(data_object))
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         combined_data = data_str + current_time + str(random.random())
         return hashlib.sha256(combined_data.encode()).hexdigest()
 
@@ -264,43 +264,24 @@ class FileUploaderGUI:
         job["ID"] = self.compute_unique_id(job)
         if job["NumberOfDocuments"] > 0:
             for document in job["Documents"]:
-                document["ID"] = job["ID"]
+                document["ContentId"] = job["ID"]
                 document["DocumentId"] = self.compute_unique_id(document)
-                document["content_id"] = document['FileName']+ "_" + self.compute_unique_id(document) 
-                #This is the content_id; This id identifies any other media extracted from this piece of content,
-                # think Images and summaries they will have the same content_id but will have respective Id's such as DocumentId, PictureID, AudioID and so on. 
-                # These display on the dashboard as media_id for streamlined message storage. If you need to acces these properties they can still be accessed by Body['DocumentId'] or item.get('DocumentId')  
-                
         if job["NumberOfImages"] > 0:
             for image in job["Images"]:
                 image["ID"] = job["ID"]
-                image['PictureID'] = self.compute_unique_id(image) 
-                image["content_id"] = image['FileName']+ "_" + self.compute_unique_id(image)
+                image["ContentId"] = job["ID"]
         if job["NumberOfAudio"] > 0:
             for audio in job["Audio"]:
-                audio['ID'] = job['ID']                
+                audio["ContentId"] = job["ID"]
                 audio["AudioID"] = self.compute_unique_id(audio)
-                audio["content_id"] = audio['FileName']+ "_" + self.compute_unique_id(audio)
         if job["NumberOfVideo"] > 0:
             for video in job["Video"]:
                 video["ID"] = job["ID"]
                 video["VideoID"] = self.compute_unique_id(video)
-                video["content_id"] = video['FileName']+ "_" + self.compute_unique_id(video)
         return job
 
     def send_bson_obj(self, job):
         try:
-            # Create a deep copy of the job without the Payload for debugging
-            debug_job = json.loads(json.dumps(job, default=str))  # Convert to JSON-serializable format
-            for section in ['Documents', 'Images', 'Audio', 'Video']:
-                if section in debug_job and debug_job[section]:
-                    for item in debug_job[section]:
-                        item['Payload'] = '[Payload excluded]'  # Replace payload with placeholder
-
-            # Print the debug-friendly job for inspection
-            print("Message body to be sent (excluding Payload):", debug_job)
-
-            # Encode the original job as BSON and send it over the socket
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(("localhost", 12349))
             s.sendall(encode(job))
@@ -308,8 +289,6 @@ class FileUploaderGUI:
             return True
         except Exception as e:
             return str(e)
-
-
 
     def upload_files(self):
         # Check if at least one file is selected
