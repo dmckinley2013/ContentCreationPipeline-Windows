@@ -207,7 +207,7 @@ class FileUploaderGUI:
                     self.job["Documents"] = [
                         {
                             "ID": "ObjectID",
-                            "ContentId": "ObjectID",
+                            "content_id": "ObjectID",
                             "DocumentType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -220,7 +220,7 @@ class FileUploaderGUI:
                     self.job["Images"] = [
                         {
                             "ID": "ObjectID",
-                            "ContentId": "ObjectID",
+                            "content_id": "ObjectID",
                             "PictureType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -232,7 +232,7 @@ class FileUploaderGUI:
                     self.job["Audio"].append(
                         {
                             "ID": "ObjectID",
-                            "ContentId": "ObjectID",
+                            "content_id": "ObjectID",
                             "AudioType": Path(filename).suffix[1:],
                             "FileName": Path(filename).name,
                             "Payload": f.read(),
@@ -264,15 +264,15 @@ class FileUploaderGUI:
         job["ID"] = self.compute_unique_id(job)
         if job["NumberOfDocuments"] > 0:
             for document in job["Documents"]:
-                document["ContentId"] = job["ID"]
+                document["content_id"] = job["ID"]
                 document["DocumentId"] = self.compute_unique_id(document)
         if job["NumberOfImages"] > 0:
             for image in job["Images"]:
                 image["ID"] = job["ID"]
-                image["ContentId"] = job["ID"]
+                image["content_id"] = job["ID"]
         if job["NumberOfAudio"] > 0:
             for audio in job["Audio"]:
-                audio["ContentId"] = job["ID"]
+                audio["content_id"] = job["ID"]
                 audio["AudioID"] = self.compute_unique_id(audio)
         if job["NumberOfVideo"] > 0:
             for video in job["Video"]:
