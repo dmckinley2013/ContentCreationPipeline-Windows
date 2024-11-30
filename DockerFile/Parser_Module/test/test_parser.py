@@ -10,7 +10,7 @@ from parse import handle_client, parse_bson_obj, publish_to_rabbitmq, receive_bs
 class TestParseFunctions(unittest.TestCase):
     def setUp(self):
         self.obj = {
-            'Documents': [{'DocumentId': 'ObjectID', 'DocumentType': 'String', 'FileName': 'String', 'Payload': ''}],
+            'Documents': [{'DocumentId': 'ObjectID', 'DocumentType': 'String', 'file_name': 'String', 'Payload': ''}],
             'Images': [],
             'Audio': [],
             'Video': []

@@ -121,7 +121,7 @@ class FileUploaderGUI:
             frame = ttk.Frame(self.audio_frame)
             frame.grid(row=i, column=0, sticky="ew", pady=2)
 
-            filename = audio["FileName"]
+            filename = audio["file_name"]
             if len(filename) > 40:
                 filename = filename[:37] + "..."
 
@@ -168,7 +168,7 @@ class FileUploaderGUI:
                         "ID": "ObjectID",
                         "DocumentId": "ObjectID",
                         "DocumentType": Path(filename).suffix[1:],
-                        "FileName": Path(filename).name,
+                        "file_name": Path(filename).name,
                         "Payload": f.read(),
                     }]
                     self.job["NumberOfDocuments"] = 1
@@ -179,7 +179,7 @@ class FileUploaderGUI:
                         "ID": "ObjectID",
                         "PictureID": "ObjectID",
                         "PictureType": Path(filename).suffix[1:],
-                        "FileName": Path(filename).name,
+                        "file_name": Path(filename).name,
                         "Payload": f.read(),
                     }]
                     self.job["NumberOfImages"] = 1
@@ -189,7 +189,7 @@ class FileUploaderGUI:
                         "ID": "ObjectID",
                         "AudioID": "ObjectID",
                         "AudioType": Path(filename).suffix[1:],
-                        "FileName": Path(filename).name,
+                        "file_name": Path(filename).name,
                         "Payload": f.read(),
                     })
                     self.job["NumberOfAudio"] = len(self.job["Audio"])
@@ -201,7 +201,7 @@ class FileUploaderGUI:
                         "ID": "ObjectID",
                         "VideoID": "ObjectID",
                         "VideoType": Path(filename).suffix[1:],
-                        "FileName": Path(filename).name,
+                        "file_name": Path(filename).name,
                         "Payload": f.read(),
                     }]
                     self.job["NumberOfVideo"] = 1
@@ -269,9 +269,9 @@ class FileUploaderGUI:
                                 'job_id': item['ID'],
                                 'content_id': item.get('DocumentId') or item.get('PictureID') or item.get('AudioID') or item.get('VideoID'),
                                 'content_type': get_content_type(key, item),
-                                'file_name': item['FileName'],
+                                'file_name': item['file_name'],
                                 'status': 'Processed',
-                                'message': f"{get_content_type(key, item)} file '{item['FileName']}' successfully sent to {key} queue"
+                                'message': f"{get_content_type(key, item)} file '{item['file_name']}' successfully sent to {key} queue"
                             }
 
                             # Send to dashboard queue
@@ -290,7 +290,7 @@ class FileUploaderGUI:
                                 properties=pika.BasicProperties(delivery_mode=2)
                             )
 
-                            logging.info(f"Successfully sent {key}: ID={item.get('ID')}, FileName={item.get('FileName')} to {self.queues[key]}")
+                            logging.info(f"Successfully sent {key}: ID={item.get('ID')}, FileName={item.get('file_name')} to {self.queues[key]}")
                         except Exception as e:
                             logging.error(f"Failed to send {key}: {e}")
                             raise

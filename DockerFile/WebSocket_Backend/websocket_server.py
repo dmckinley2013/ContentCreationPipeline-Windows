@@ -28,7 +28,7 @@ class WebSocketServer:
                     'content_id': data.get('content_id'),
                     'content_type': self._determine_content_type(data),
                     'media_id': data.get('DocumentId') or data.get('PictureID') or data.get('AudioID') or data.get('VideoID'),
-                    'file_name': data.get('FileName'),
+                    'file_name': data.get('file_name'),
                     'status': 'Processed',
                     'message': self._generate_message(data)
                 }
@@ -47,7 +47,7 @@ class WebSocketServer:
         return data.get('content_type', 'Unknown Type')
 
     def _generate_message(self, data):
-        file_name = data.get('FileName', 'unknown file')
+        file_name = data.get('file_name', 'unknown file')
         if 'DocumentId' in data:
             return f"Document file '{file_name}' was successfully processed"
         elif 'PictureID' in data:

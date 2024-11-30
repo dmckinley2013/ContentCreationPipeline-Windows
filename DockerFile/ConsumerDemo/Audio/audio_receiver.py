@@ -28,7 +28,7 @@ def consumer_connection(routing_key):
 def on_message_received(ch, method, properties, body):
     body=bson.loads(body)
     #save the image
-    with open(f'{body["FileName"]}', 'wb') as image_file:
+    with open(f'{body["file_name"]}', 'wb') as image_file:
         image_file.write(body['Payload'])
   
     

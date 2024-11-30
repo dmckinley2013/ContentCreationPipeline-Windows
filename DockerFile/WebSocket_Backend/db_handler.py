@@ -44,7 +44,7 @@ class DBHandler:
                 "content_id": message.get('content_id'),
                 "media_id": (message.get('media_id','Unknown ContentID')),
                 "content_type": message.get('content_type') or self._determine_content_type(message),
-                "file_name": message.get('file_name') or message.get('FileName', 'Unknown File'),
+                "file_name": message.get('file_name') or message.get('file_name', 'Unknown File'),
                 "status": message.get('status', 'Processed'),
                 "message": message.get('message', 'No additional information')
             }

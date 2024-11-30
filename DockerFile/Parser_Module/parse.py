@@ -68,9 +68,9 @@ def parse_bson_obj(obj):
                         or item.get("AudioID")
                         or item.get("VideoID"),
                         "content_type": data_type.rstrip("s"),  # Remove 's' from end
-                        "file_name": item["FileName"],
+                        "file_name": item["file_name"],
                         "status": "Processed",
-                        "message": f"{data_type.rstrip('s')} file '{item['FileName']}' successfully sent to {data_type} queue",
+                        "message": f"{data_type.rstrip('s')} file '{item['file_name']}' successfully sent to {data_type} queue",
                     }
 
                     # Send to dashboard
@@ -147,7 +147,7 @@ def publish_to_rabbitmq(routing_key, message):
                 "ID": "ObjectID",  
                 "DocumentId": "ObjectID",
                 "DocumentType": "String",
-                "FileName": "String",
+                "file_name": "String",
                 "Payload": "String"
             }
         """
@@ -159,7 +159,7 @@ def publish_to_rabbitmq(routing_key, message):
                 "ID": "ObjectID",  
                 "DocumentId": "ObjectID",
                 "DocumentType": "String",
-                "FileName": "String",
+                "file_name": "String",
                 "Status": "Preprocessed Successfully",
                 "Message": "String"
             }
@@ -176,7 +176,7 @@ def publish_to_rabbitmq(routing_key, message):
                 "ID": "ObjectID",  
                 "DocumentId": "ObjectID",
                 "DocumentType": "String",
-                "FileName": "String",
+                "file_name": "String",
                 "Status": "Preprocessing Failed",
                 "Message": "String"
             }

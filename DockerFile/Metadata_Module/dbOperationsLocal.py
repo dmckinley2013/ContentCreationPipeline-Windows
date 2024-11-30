@@ -294,6 +294,34 @@ def addDigitalTwinRelation(node1array, relation, node2array):
             })
 
 
+def addImageLearner(node1array, relation, mainContentID):
+    with GraphDatabase.driver(URI, auth=AUTH) as driver:
+        learnerObject = node1array[1]
+        mediaType = node1array[2]
+        location = node1array[3]
+        contentID = node1array[4]
+        predictedClass = node1array[5]
+        
+        with driver.session() as session:
+            query = f"""
+                MERGE (node1:`{learnerObject}`:`{mediaType}` {{name: $nameofNode1}})
+                ON CREATE SET node1.contentID = $contentID, 
+                              node1.location = $location, 
+                              node1.predictedClass = $predictedClass
+                MERGE (node2 {{contentID: $mainContentID}})
+                ON CREATE SET node2.missionProfile = $missionProfile2
+                MERGE (node1)<-[:`has_{relation}`]-(node2)
+                MERGE (node2)<-[:`{relation}_of`]-(node1)
+            """
+            
+            session.run(query, {
+                "nameofNode1": node1array[0],
+                "contentID": contentID,
+                "location": location,
+                "predictedClass": predictedClass,
+                "mainContentID": mainContentID,
+                "missionProfile2": "Default Mission Profile"  # Update with actual mission profile if available
+            })
 
 
 # nodes_relation = ["F18, ENGINE_OF, G414", "Boeing, ENGINE_OF, RR304"]
@@ -329,12 +357,37 @@ def store_relationship():
     # print(relationships)
     return relationships
 
-# 
+# MAKE DELETE FUNCTION FOR NODES and Relation
 
 
 
 class nodeBuilder:
+    def imagePackageParser(package, contentID):
+        # with GraphDatabase.driver(URI, auth=AUTH) as driver:
+            #node 0 is learner node 
+            #index 1 is node 1 index 2 is relation index 3 is node 2 
+            #  
+            # updateNodes()
+            # getAllNodes()
+            # nodesArray = [nodes.split(",") for nodes in store_relationship()]
+
+        content_ID = contentID
+        
     
+        learnerObject = package[0][0] #tracing the PDF 
+        
+        node1array = package
+        print("Node HERE")
+        print(node1array)
+        # print(node1array)
+        relation = 'Image'
+        # print(relation)
+       
+        
+        # print(node2array)
+        addImageLearner(node1array, relation, content_ID)
+        del package[0:1] 
+
     def packageParser(package):
         # with GraphDatabase.driver(URI, auth=AUTH) as driver:
             #node 0 is learner node 
@@ -362,7 +415,7 @@ class nodeBuilder:
         del package[0:3] 
 
        
- # Remove 3 elements since node1array, relation, node2array are used
+        # Remove 3 elements since node1array, relation, node2array are used
 
         counter = 0
         size = len(package)
@@ -394,7 +447,10 @@ if __name__ == "__main__":
     package = [['Tank.pdf', 'learnerObject', 'pdf'], ['learnerObject'], ['Titan65 engine', 'digitalTwin', 'Engine'], ['Titan65 engine', 'digitalTwin', 'Engine'], ['engine'], ['M551 Sheridan', 'digitalTwin', 'Ground'], ['In addition', 'digitalTwin', 'Aircraft']]
     
     # package = [['docName', 'learnerObject', 'pdf'],['learnerObject'], ['FE718 engine', 'digitalTwin', 'Engine']]
-    nodeBuilder.packageParser(package)
+    # nodeBuilder.packageParser(package)
+    imagePackage = ["Test Image 3","learnerObject", "Image","Location_path","22", "PredictedClass" ]
+    nodeBuilder.imagePackageParser(imagePackage, "1f8f41bd0ea9214b93c834cc4e28209191a2964101fdc84c823b9b9191b5ead6")
+
     #mainNode = "Titan65 engine"
     #nodeTracebackManual() #This is for testing not when the analyzer calls very similiar function nodeTraceback which is used to send a message to the dashboard about the main node.
     # for eachItem in package:

@@ -163,7 +163,7 @@ class FileUploaderGUI:
             frame = ttk.Frame(self.audio_frame)
             frame.grid(row=i, column=0, sticky="ew", pady=2)
 
-            filename = audio["FileName"]
+            filename = audio["file_name"]
             if len(filename) > 40:  # Truncate long filenames
                 filename = filename[:37] + "..."
 
@@ -201,7 +201,7 @@ class FileUploaderGUI:
         filetypes = {
             "document": [("PDF files", "*.pdf"), ("All files", "*.*")],
             "image": [
-                ("Image files", "*.png;*.jpg;*.jpeg;*.gif"),
+                ("Image files", "*.jpg;*.jpeg;*.gif*.png;"),
                 ("All files", "*.*"),
             ],
             "audio": [("Audio files", "*.mp3;*.wav"), ("All files", "*.*")],
@@ -218,7 +218,7 @@ class FileUploaderGUI:
                             "ID": "ObjectID",
                             "content_id": "ObjectID",
                             "DocumentType": Path(filename).suffix[1:],
-                            "FileName": Path(filename).name,
+                            "file_name": Path(filename).name,
                             "Payload": f.read(),
                         }
                     ]
@@ -231,7 +231,7 @@ class FileUploaderGUI:
                             "ID": "ObjectID",
                             "content_id": "ObjectID",
                             "PictureType": Path(filename).suffix[1:],
-                            "FileName": Path(filename).name,
+                            "file_name": Path(filename).name,
                             "Payload": f.read(),
                         }
                     ]
@@ -243,7 +243,7 @@ class FileUploaderGUI:
                             "ID": "ObjectID",
                             "content_id": "ObjectID",
                             "AudioType": Path(filename).suffix[1:],
-                            "FileName": Path(filename).name,
+                            "file_name": Path(filename).name,
                             "Payload": f.read(),
                         }
                     )
@@ -257,7 +257,7 @@ class FileUploaderGUI:
                             "ID": "ObjectID",
                             "VideoID": "ObjectID",
                             "VideoType": Path(filename).suffix[1:],
-                            "FileName": Path(filename).name,
+                            "file_name": Path(filename).name,
                             "Payload": f.read(),
                         }
                     ]

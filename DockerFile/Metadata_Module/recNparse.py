@@ -79,7 +79,7 @@ class MessageProcessor:
         try:
             obj = decode(body)
             message_content_id = obj["content_id"]
-            file_name = obj["FileName"]
+            file_name = obj["file_name"]
 
             # Check if the ContentId matches
             if message_content_id != content_id:

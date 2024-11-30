@@ -68,9 +68,9 @@ def send_bson_obj(job):
                             'job_id': item['ID'],
                             'content_id': item.get('DocumentId') or item.get('PictureID') or item.get('AudioID') or item.get('VideoID'),
                             'content_type': get_content_type(key, item),
-                            'file_name': item['FileName'],
+                            'file_name': item['file_name'],
                             'status': 'Processed',
-                            'message': f"{get_content_type(key, item)} file '{item['FileName']}' successfully sent to {key} queue"
+                            'message': f"{get_content_type(key, item)} file '{item['file_name']}' successfully sent to {key} queue"
                         }
 
                         # Send to dashboard queue
@@ -89,7 +89,7 @@ def send_bson_obj(job):
                             properties=pika.BasicProperties(delivery_mode=2)
                         )
 
-                        logging.info(f"Successfully sent {key}: ID={item.get('ID')}, FileName={item.get('FileName')} to {queues[key]}")
+                        logging.info(f"Successfully sent {key}: ID={item.get('ID')}, FileName={item.get('file_name')} to {queues[key]}")
                     except Exception as e:
                         logging.error(f"Failed to send {key}: {e}")
                         raise
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                 "ID": "ObjectID",  
                 "DocumentId": "ObjectID",
                 "DocumentType": "String",
-                "FileName": "String",
+                "file_name": "String",
                 "Payload": b"Binary"
             }
         ],
@@ -144,7 +144,7 @@ if __name__ == '__main__':
                 "ID": "ObjectID", 
                 "PictureID": "ObjectID",
                 "PictureType": "String",
-                "FileName": "String",
+                "file_name": "String",
                 "Payload": b"Binary"
             }
         ],
@@ -153,14 +153,14 @@ if __name__ == '__main__':
                 "ID": "ObjectID", 
                 "AudioID": "ObjectID",
                 "AudioType": "String",
-                "FileName": "String",
+                "file_name": "String",
                 "Payload": b"Binary"
             },
             {
                 "ID": "ObjectID", 
                 "AudioID": "ObjectID",
                 "AudioType": "String",
-                "FileName": "String",
+                "file_name": "String",
                 "Payload": b"Binary2"
             }
         ],
@@ -170,19 +170,19 @@ if __name__ == '__main__':
         with open('Project_4.pdf', 'rb') as f:
             base_job['Documents'][0]['Payload'] = f.read()
             base_job['Documents'][0]["DocumentType"] = "pdf"
-            base_job['Documents'][0]["FileName"] = f.name
+            base_job['Documents'][0]["file_name"] = f.name
         with open('x.png', 'rb') as f:
             base_job['Images'][0]['Payload'] = f.read()
             base_job['Images'][0]["PictureType"] = "png"
-            base_job['Images'][0]["FileName"] = f.name
+            base_job['Images'][0]["file_name"] = f.name
         with open('audio.mp3', 'rb') as f:
             base_job['Audio'][0]['Payload'] = f.read()
             base_job['Audio'][0]["AudioType"] = "mp3"
-            base_job['Audio'][0]["FileName"] = f.name
+            base_job['Audio'][0]["file_name"] = f.name
         with open('audio2.mp3', 'rb') as f:
             base_job['Audio'][1]['Payload'] = f.read()
             base_job['Audio'][1]["AudioType"] = "mp3"
-            base_job['Audio'][1]["FileName"] = f.name
+            base_job['Audio'][1]["file_name"] = f.name
     except FileNotFoundError as e:
         logging.error(f"File not found: {e}")
         exit(1)

@@ -79,14 +79,14 @@ if __name__ == '__main__':
             "ID": "ObjectID",  
             "DocumentId": "ObjectID",
             "DocumentType": "String",
-            "FileName": "String",
+            "file_name": "String",
             "Payload": "Binary"
         },
         {
             "ID": "ObjectID",  
             "DocumentId": "ObjectID",
             "DocumentType": "String",
-            "FileName": "String",
+            "file_name": "String",
             "Payload": "Binary2"
         }
         
@@ -96,7 +96,7 @@ if __name__ == '__main__':
             "ID": "ObjectID", 
             "PictureID": "ObjectID",
             "PictureType": "String",
-            "FileName": "String",
+            "file_name": "String",
             "Payload": "Binary"
         }
        ,
@@ -104,7 +104,7 @@ if __name__ == '__main__':
             "ID": "ObjectID", 
             "PictureID": "ObjectID",
             "PictureType": "String",
-            "FileName": "String",
+            "file_name": "String",
             "Payload": "Binary2"
         }
     ],
@@ -113,14 +113,14 @@ if __name__ == '__main__':
             "ID": "ObjectID", 
             "AudioID": "ObjectID",
             "AudioType": "String",
-            "FileName": "String",
+            "file_name": "String",
             "Payload": "Binary"
         },
         {
             "ID": "ObjectID", 
             "AudioID": "ObjectID",
             "AudioType": "String",
-            "FileName": "String",
+            "file_name": "String",
             "Payload": "Binary2"
         }
     ],
@@ -129,14 +129,14 @@ if __name__ == '__main__':
             "ID": "ObjectID", 
             "VideoID": "ObjectID",
             "VideoType": "String",
-            "FileName": "String",
+            "file_name": "String",
             "Payload": "Binary5"
         },
         {
             "ID": "ObjectID", 
             "VideoID": "ObjectID",
             "VideoType": "String",
-            "FileName": "String",
+            "file_name": "String",
             "Payload": "Binary6"
         }
     ],
