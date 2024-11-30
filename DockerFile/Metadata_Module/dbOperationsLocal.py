@@ -250,12 +250,13 @@ def addLearnerRelation(node1array, relation, node2array):
 
         primaryType2 = node2array[1]
         secondaryType2 = node2array[2]
-        missionProfile2 = "test"
+        missionProfile2 = node2array[3]
 
         with driver.session() as session:
             query = f"""
                 MERGE (node1:`{learnerObject}`:`{mediaType}` {{name: $nameofNode1, location: $location, contentID: $contentID}})
-                MERGE (node2:`{primaryType2}`:`{secondaryType2}` {{name: $nameofNode2, missionProfile: $missionProfile2}})
+                MERGE (node2:`{primaryType2}`:`{secondaryType2}` {{name: $nameofNode2}})
+                ON CREATE SET node2.missionProfile = $missionProfile2
                 MERGE (node1)<-[:`has_{relation}`]-(node2)
                 MERGE (node2)<-[:`{relation}_of`]-(node1)
             """
@@ -266,6 +267,7 @@ def addLearnerRelation(node1array, relation, node2array):
                 "contentID": contentID,
                 "missionProfile2": missionProfile2
             })
+
 
 
 def addDigitalTwinRelation(node1array, relation, node2array):
@@ -290,38 +292,6 @@ def addDigitalTwinRelation(node1array, relation, node2array):
                 "nameofNode2": node2array[0]
                 
             })
-
-        # statusFeed.messageBuilder("TEST","Metadata has been stored to Neo4j ", "Details")
-        # session.run(
-        #     f"""
-        #     MERGE (node1:digitalTwin {{name: $nameofNode1}})
-        #     MERGE (node2:digitalTwin {{name: $nameofNode2}})
-        #     MERGE (node1)<-[:{{$relationHas}}]-(node2)
-        #     MERGE (node2)<-[:{{relationOf}}]-(node1)
-        #     """,
-        #     {
-        #         "nameofNode1": node1,
-        #         "nameofNode2": node2,
-        #         "relationHas": "has_" + relation,
-        #         "relationOf": relation + "_of"
-        #     }
-        # )
-        # relString = node1 + " has the relationship of " + relation + " with " + node2
-        # statusFeed.messageBuilder("123456","Metadata has been stored to Neo4j: " + relString, "N/A")
-
-
-#Node properties 
-#digitalTwin
-    #tmname:primaryNodeType(DT):SecondaryType(Aircraft,ship,etc): Properties MissionProfile, name
-
-#learnerObject
-    #tname:primaryNodeType(LO):mediaType(pdf,img/jpeg,etc):Properties fileLocation:contentID
-
-# with GraphDatabase.driver(URI, auth=AUTH) as driver:
-#     nameOfNode = input('What is the node name? : ')
-#     missionProfile = input('What is the Mission Profile? : ')
-#     yearBuilt = input('What is the year built? : ')
-#     create_digitalTwin(driver,nameOfNode,missionProfile,yearBuilt)
 
 
 

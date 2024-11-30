@@ -3,6 +3,7 @@ import spacy
 from spacy.tokens import Doc
 from dbOperationsLocal import nodeBuilder
 import copy
+import os
 
 # Register a custom attribute for inferred relations
 if not Doc.has_extension("relations"):
@@ -54,9 +55,9 @@ def create_type_based_relation_extractor(nlp, name):
 
 
 # Load the trained NER model and add the relationship extractor
-nlp = spacy.load(
-    "C:\\Users\\isaam\\vscode\\ContentCreationPipeline-Windows\\DockerFile\\Metadata_Module\\custom_ner_modelREL"
-)  # change to your custom directory
+current_dir = os.path.dirname(__file__)
+model_path = os.path.join(current_dir, "custom_ner_modelREL")
+nlp = spacy.load(model_path) # change to your custom directory
 nlp.add_pipe("type_based_relation_extractor", last=True)
 
 
@@ -139,7 +140,8 @@ class entityRelationExtraction:
         prompt = "".join(sentences)
         if len(prompt) > 900:
             prompt = prompt[:900]
-        prompt += "What is the {main_topic_node_copy[0]} and what does it do, Two sentence max"
+        mainNodeName = main_topic_node_copy[0]
+        prompt = f"What is the {mainNodeName} and what does it do? Two sentences max."
 
         missionProfile = missionProfileExtraction(prompt)
         main_topic_node_copy.append(missionProfile)
@@ -155,7 +157,7 @@ class entityRelationExtraction:
 
         # Parse the nodes with relationships
 
-        # nodeBuilder.packageParser(nodesUnique)
+        nodeBuilder.packageParser(nodesUnique)
 
 
 def missionProfileExtraction(mainNode):

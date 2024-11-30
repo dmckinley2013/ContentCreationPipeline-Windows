@@ -446,11 +446,11 @@ def on_message_received(ch, method, properties, body):
 
         # send the document to the next module
         contentID = publish_to_rabbitmq(".Store.", body)
-        processor = MessageProcessor()
-        processor.consume_store(contentID)
+        processorStore = MessageProcessor()
+        processorStore.consume_store(contentID)
 
-        processor1 = ImageClassifier()
-        processor1.consume_image(contentID)
+        processorImage = ImageClassifier()
+        processorImage.consume_image(contentID)
 
         # Example usage: consume from the Store queue
 

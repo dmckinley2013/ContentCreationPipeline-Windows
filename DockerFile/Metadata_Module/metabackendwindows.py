@@ -15,7 +15,7 @@ def list_models():
         return None
 
 
-def pull_model(model_name="llama2:7b"):
+def pull_model(model_name="orca-mini"):
     """Pull a specific model"""
     print(f"Downloading {model_name}...")
     try:
@@ -34,7 +34,7 @@ def generate_text():
     print("called gen text")
     data = request.json
     input_text = data.get("input_text", "")
-    model_name = "llama2:7b"  # Using a smaller model for testing (use mistral if that's the mac default im not really sure what the default on mac is)
+    model_name = "orca-mini"  # Using a smaller model for testing (use mistral if that's the mac default im not really sure what the default on mac is)
 
     # Check if we have any models
     models = list_models()

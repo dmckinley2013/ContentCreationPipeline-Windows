@@ -7,6 +7,15 @@ import datetime
 import json
 import random
 from pathlib import Path
+import sys
+import os
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "../Metadata_Module"))
+)
+
+
+from image_module import ImageClassifier
+
 
 
 class FileUploaderGUI:
@@ -314,6 +323,14 @@ class FileUploaderGUI:
             if result is True:
                 self.status_label.config(text="Files uploaded successfully!")
                 messagebox.showinfo("Success", "Files have been uploaded successfully!")
+
+                if processed_job["NumberOfImages"] > 0:
+                    # Extract the content_id from the first image (assuming all images share the same content_id)
+                    image_content_id = processed_job["Images"][0]["content_id"]
+
+                    # Initialize ImageClassifier and pass the content ID
+                    processorImage = ImageClassifier()
+                    processorImage.consume_image(image_content_id)
             else:
                 self.status_label.config(text=f"Upload failed: {result}")
                 messagebox.showerror("Error", f"Upload failed: {result}")
