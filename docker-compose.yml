@@ -137,7 +137,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama:/root/.ollama
+      - ./ollama:/root/.ollama
     # Add healthcheck to ensure service is running properly
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
@@ -161,7 +161,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama:/root/.ollama
+      - ./ollama:/root/.ollama
     # Add healthcheck to ensure service is running properly
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
@@ -178,7 +178,3 @@ services:
       - OLLAMA_ORIGINS=*
     profiles:
       - non-gpu
-
-volumes:
-  ollama:
-    name: ollama_data

@@ -9,6 +9,7 @@ import logging
 from transformers import AutoModelForImageClassification, AutoImageProcessor
 from dbOperationsLocal import nodeBuilder
 
+
 class ImageClassifier:
     def __init__(self):
         # Set up logging
@@ -78,7 +79,7 @@ class ImageClassifier:
             f.write(data)
 
     def classify_images(self, ch, method, properties, body, content_id):
-        imageNodes=[]
+        imageNodes = []
         try:
             obj = decode(body)
             message_content_id = obj["content_id"]
@@ -117,10 +118,16 @@ class ImageClassifier:
                 print(
                     f"Classification results - Class: {predicted_class}, Confidence: {confidence_score:.2f}"
                 )
-                imageLearner = [file_name,"learnerObject", "Image","Location_path",content_id, "PredictedClass" ]
+                imageLearner = [
+                    file_name,
+                    "learnerObject",
+                    "Image",
+                    "Location_path",
+                    content_id,
+                    "PredictedClass",
+                ]
                 imageNodes.append(imageLearner)
 
-            
             except Exception as e:
                 logging.error(f"Error in classification: {e}")
                 raise
@@ -134,7 +141,7 @@ class ImageClassifier:
                 f"Processed image with Content ID: {message_content_id}, Class: {predicted_class}"
             )
             ch.basic_ack(delivery_tag=method.delivery_tag)
-            #functionCall here to send to DB
+            # functionCall here to send to DB
             nodeBuilder.imagePackageParser(imageNodes, message_content_id)
 
         except KeyError as e:

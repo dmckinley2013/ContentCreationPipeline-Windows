@@ -10,13 +10,11 @@ def getAllNodes():
     with driver.session() as session:
         query = """MATCH (n) RETURN n LIMIT 100"""
         result = session.run(query)
-        
+
         # Extract and print all nodes
         for record in result:
             node = record["n"]
             print(node)
-   
-
 
 
 def nodesRelation():
@@ -45,7 +43,9 @@ def nodesRelation():
                 """
 
                 # Run the query to find relationships
-                resultNew = session.run(queryFindRelationFrom, {"nodeName": nodeToLookFor})
+                resultNew = session.run(
+                    queryFindRelationFrom, {"nodeName": nodeToLookFor}
+                )
 
                 # Print the relationships
                 for relRecord in resultNew:
@@ -53,7 +53,9 @@ def nodesRelation():
                     relationshipType = relRecord["relationshipType"]
                     connectedNode = relRecord["connectedNode"]
 
-                    print(f"Node: {tNode['name']} -> [{relationshipType}] -> {connectedNode['name']}")
+                    print(
+                        f"Node: {tNode['name']} -> [{relationshipType}] -> {connectedNode['name']}"
+                    )
 
             if not found_any:
                 print("No Relationships were found")
@@ -62,12 +64,13 @@ def nodesRelation():
         # Ensure the driver is closed
         driver.close()
 
-def nodeTraceback(learnerObject,contentID):
+
+def nodeTraceback(learnerObject, contentID):
     driver = GraphDatabase.driver(URI, auth=AUTH)
     with driver.session() as session:
         # The node to look for is passed as a parameter
         nodeToLookFor = learnerObject
-        
+
         # Query to check if the node exists
         query = """MATCH (n {name: $nodeToLookFor}) RETURN n"""
         result = session.run(query, {"nodeToLookFor": nodeToLookFor})
@@ -79,23 +82,29 @@ def nodeTraceback(learnerObject,contentID):
             tNode = record["n"]
             print("Node found:", tNode)  # Debugging: Print the node details
             found_any = True
-            
+
             # Query to find all paths leading to and from the specified node
             queryFindRelations = """
             MATCH path = (node {name: $nodeToLookFor})-[*]-(connectedNode)
             RETURN node, nodes(path) AS nodeChain, relationships(path) AS relationChain
             """
-            resultRelations = session.run(queryFindRelations, {"nodeToLookFor": nodeToLookFor})
+            resultRelations = session.run(
+                queryFindRelations, {"nodeToLookFor": nodeToLookFor}
+            )
 
             # Process each path and deduplicate relationships
             for path in resultRelations:
                 nodeChain = path["nodeChain"]  # List of nodes along the path
-                relationChain = path["relationChain"]  # List of relationships along the path
+                relationChain = path[
+                    "relationChain"
+                ]  # List of relationships along the path
 
                 for i in range(len(relationChain)):
                     fromNode = nodeChain[i]
                     toNode = nodeChain[i + 1]
-                    relationshipType = relationChain[i].type  # Get the type of the relationship
+                    relationshipType = relationChain[
+                        i
+                    ].type  # Get the type of the relationship
 
                     # Ignore `learnerObject` relationships unless involving the specified node
                     if relationshipType in ["learnerObject_of", "has_learnerObject"]:
@@ -111,20 +120,26 @@ def nodeTraceback(learnerObject,contentID):
                     )
 
                     # Print only if the relationship is unique
-                    if (relationship_key, relationshipType) not in printed_relationships:
+                    if (
+                        relationship_key,
+                        relationshipType,
+                    ) not in printed_relationships:
                         print(relationship_string)
                         printed_relationships.add((relationship_key, relationshipType))
-                        
+
                         relationMessage.append(relationship_string)
-        relationMessageString = ', '.join(relationMessage)
+        relationMessageString = ", ".join(relationMessage)
         print(relationMessageString)
         print("STATUS FEED CALLED HERE")
-        statusFeed.messageBuilder(learnerObject,contentID,"Nodes and relations have been stored to Neo4j ", relationMessageString)        
-
+        statusFeed.messageBuilder(
+            learnerObject,
+            contentID,
+            "Nodes and relations have been stored to Neo4j ",
+            relationMessageString,
+        )
 
         if not found_any:
             print("No node found with the specified name.")
-
 
 
 def nodeTracebackManual():
@@ -132,9 +147,11 @@ def nodeTracebackManual():
     with driver.session() as session:
         # Get a partial node name from user input
         partialName = input("Enter part of the name of the node to search: ")
-        
+
         # Query to find nodes with similar names
-        queryFindSimilarNodes = """MATCH (n) WHERE n.name CONTAINS $partialName RETURN n"""
+        queryFindSimilarNodes = (
+            """MATCH (n) WHERE n.name CONTAINS $partialName RETURN n"""
+        )
         result = session.run(queryFindSimilarNodes, {"partialName": partialName})
 
         # Collect matching nodes
@@ -155,7 +172,11 @@ def nodeTracebackManual():
         # Let the user select a node
         while True:
             try:
-                selection = int(input("Enter the number corresponding to the node you want to trace: "))
+                selection = int(
+                    input(
+                        "Enter the number corresponding to the node you want to trace: "
+                    )
+                )
                 if 1 <= selection <= len(matching_nodes):
                     selected_node = matching_nodes[selection - 1]
                     break
@@ -174,7 +195,9 @@ def nodeTracebackManual():
         WHERE fromNode.name = $nodeToLookFor OR toNode.name = $nodeToLookFor
         RETURN fromNode, rel, toNode
         """
-        resultRelationships = session.run(queryFindAllRelationships, {"nodeToLookFor": nodeToLookFor})
+        resultRelationships = session.run(
+            queryFindAllRelationships, {"nodeToLookFor": nodeToLookFor}
+        )
 
         # Deduplicate and print relationships
         printed_relationships = set()
@@ -214,7 +237,7 @@ def updateNodes():
             tNode = record["tNode"]
             print("Node found:", tNode)  # Debugging: Print the node details
             found_any = True
-            
+
             # Ask user for the new name
             newName = input(f"Enter the new name for the node: ")
 
@@ -227,7 +250,7 @@ def updateNodes():
 
             # Run the update query with the node ID and new name as parameters
             resultNew = session.run(queryUpdate, {"newName": newName})
-            
+
             # Print the updated node
             for updatedRecord in resultNew:
                 updatedNode = updatedRecord["tNode"]
@@ -237,10 +260,10 @@ def updateNodes():
             print("No nodes were found with the name ' GE414'.")
 
 
-#"node1+DT,relation,node2+LO"
-#Node properties 
-#digitalTwin
-    #tmname:primaryNodeType(DT):SecondaryType(Aircraft,ship,etc): Properties MissionProfile, name
+# "node1+DT,relation,node2+LO"
+# Node properties
+# digitalTwin
+# tmname:primaryNodeType(DT):SecondaryType(Aircraft,ship,etc): Properties MissionProfile, name
 def addLearnerRelation(node1array, relation, node2array):
     with GraphDatabase.driver(URI, auth=AUTH) as driver:
         learnerObject = node1array[1]
@@ -260,14 +283,16 @@ def addLearnerRelation(node1array, relation, node2array):
                 MERGE (node1)<-[:`has_{relation}`]-(node2)
                 MERGE (node2)<-[:`{relation}_of`]-(node1)
             """
-            session.run(query, {
-                "nameofNode1": node1array[0],
-                "nameofNode2": node2array[0],
-                "location": location,
-                "contentID": contentID,
-                "missionProfile2": missionProfile2
-            })
-
+            session.run(
+                query,
+                {
+                    "nameofNode1": node1array[0],
+                    "nameofNode2": node2array[0],
+                    "location": location,
+                    "contentID": contentID,
+                    "missionProfile2": missionProfile2,
+                },
+            )
 
 
 def addDigitalTwinRelation(node1array, relation, node2array):
@@ -287,11 +312,9 @@ def addDigitalTwinRelation(node1array, relation, node2array):
                 MERGE (node1)<-[:`has_{relation}`]-(node2)
                 MERGE (node2)<-[:`{relation}_of`]-(node1)
             """
-            session.run(query, {
-                "nameofNode1": node1array[0],
-                "nameofNode2": node2array[0]
-                
-            })
+            session.run(
+                query, {"nameofNode1": node1array[0], "nameofNode2": node2array[0]}
+            )
 
 
 def addImageLearner(node1array, relation, mainContentID):
@@ -301,7 +324,7 @@ def addImageLearner(node1array, relation, mainContentID):
         location = node1array[3]
         contentID = node1array[4]
         predictedClass = node1array[5]
-        
+
         with driver.session() as session:
             query = f"""
                 MERGE (node1:`{learnerObject}`:`{mediaType}` {{name: $nameofNode1}})
@@ -313,18 +336,22 @@ def addImageLearner(node1array, relation, mainContentID):
                 MERGE (node1)<-[:`has_{relation}`]-(node2)
                 MERGE (node2)<-[:`{relation}_of`]-(node1)
             """
-            
-            session.run(query, {
-                "nameofNode1": node1array[0],
-                "contentID": contentID,
-                "location": location,
-                "predictedClass": predictedClass,
-                "mainContentID": mainContentID,
-                "missionProfile2": "Default Mission Profile"  # Update with actual mission profile if available
-            })
+
+            session.run(
+                query,
+                {
+                    "nameofNode1": node1array[0],
+                    "contentID": contentID,
+                    "location": location,
+                    "predictedClass": predictedClass,
+                    "mainContentID": mainContentID,
+                    "missionProfile2": "Default Mission Profile",  # Update with actual mission profile if available
+                },
+            )
 
 
 # nodes_relation = ["F18, ENGINE_OF, G414", "Boeing, ENGINE_OF, RR304"]
+
 
 def store_relationship():
     relationships = []  # array to store relationships
@@ -343,10 +370,12 @@ def store_relationship():
         relationships.append(relationship_string)
 
         # Prompts user to enter more objects or end input
-        additional_input = input("Do you want to add another object? (yes or no): ").lower()
+        additional_input = input(
+            "Do you want to add another object? (yes or no): "
+        ).lower()
 
         # Ends process if the user says 'no more'
-        if additional_input == 'no':
+        if additional_input == "no":
             break
 
         # Moves to next object in the loop
@@ -357,64 +386,50 @@ def store_relationship():
     # print(relationships)
     return relationships
 
-# MAKE DELETE FUNCTION FOR NODES and Relation
 
+# MAKE DELETE FUNCTION FOR NODES and Relation
 
 
 class nodeBuilder:
     def imagePackageParser(package, contentID):
-        # with GraphDatabase.driver(URI, auth=AUTH) as driver:
-            #node 0 is learner node 
-            #index 1 is node 1 index 2 is relation index 3 is node 2 
-            #  
-            # updateNodes()
-            # getAllNodes()
-            # nodesArray = [nodes.split(",") for nodes in store_relationship()]
-
         content_ID = contentID
-        
-    
-        learnerObject = package[0][0] #tracing the PDF 
-        
-        node1array = package
-        print("Node HERE")
-        print(node1array)
-        # print(node1array)
-        relation = 'Image'
-        # print(relation)
-       
-        
-        # print(node2array)
-        addImageLearner(node1array, relation, content_ID)
-        del package[0:1] 
+
+        while package:  # Loop continues as long as package is not empty
+            node1array = package[0]
+            print("Node HERE")
+            print(node1array)
+
+            relation = "Image"
+
+            addImageLearner(node1array, relation, content_ID)
+            del package[0]  # Remove just the first element instead of slice
 
     def packageParser(package):
         # with GraphDatabase.driver(URI, auth=AUTH) as driver:
-            #node 0 is learner node 
-            #index 1 is node 1 index 2 is relation index 3 is node 2 
-            #  
-            # updateNodes()
-            # getAllNodes()
-            # nodesArray = [nodes.split(",") for nodes in store_relationship()]
+        # node 0 is learner node
+        # index 1 is node 1 index 2 is relation index 3 is node 2
+        #
+        # updateNodes()
+        # getAllNodes()
+        # nodesArray = [nodes.split(",") for nodes in store_relationship()]
 
         contentID = package[0]
-        del package[0] 
+        del package[0]
         print("CONTENT MAN")
-        print(contentID)    
-        learnerObject = package[0][0] #tracing the PDF 
-        
+        print(contentID)
+        learnerObject = package[0][0]  # tracing the PDF
+
         node1array = package[0]
         node1array.append(contentID)
         # print(node1array)
         relation = package[1][0]
         # print(relation)
         node2array = package[2]
-        
+
         # print(node2array)
         addLearnerRelation(node1array, relation, node2array)
-        del package[0:3] 
+        del package[0:3]
 
-       
         # Remove 3 elements since node1array, relation, node2array are used
 
         counter = 0
@@ -435,26 +450,39 @@ class nodeBuilder:
 
             # Update size after modifying package
             size = len(package)
-        
-        nodeTraceback(learnerObject,contentID)
 
-             
-            
-               
-            
+        nodeTraceback(learnerObject, contentID)
+
 
 if __name__ == "__main__":
-    package = [['Tank.pdf', 'learnerObject', 'pdf'], ['learnerObject'], ['Titan65 engine', 'digitalTwin', 'Engine'], ['Titan65 engine', 'digitalTwin', 'Engine'], ['engine'], ['M551 Sheridan', 'digitalTwin', 'Ground'], ['In addition', 'digitalTwin', 'Aircraft']]
-    
+    package = [
+        ["Tank.pdf", "learnerObject", "pdf"],
+        ["learnerObject"],
+        ["Titan65 engine", "digitalTwin", "Engine"],
+        ["Titan65 engine", "digitalTwin", "Engine"],
+        ["engine"],
+        ["M551 Sheridan", "digitalTwin", "Ground"],
+        ["In addition", "digitalTwin", "Aircraft"],
+    ]
+
     # package = [['docName', 'learnerObject', 'pdf'],['learnerObject'], ['FE718 engine', 'digitalTwin', 'Engine']]
     # nodeBuilder.packageParser(package)
-    imagePackage = ["Test Image 3","learnerObject", "Image","Location_path","22", "PredictedClass" ]
-    nodeBuilder.imagePackageParser(imagePackage, "1f8f41bd0ea9214b93c834cc4e28209191a2964101fdc84c823b9b9191b5ead6")
+    imagePackage = [
+        "Test Image 3",
+        "learnerObject",
+        "Image",
+        "Location_path",
+        "22",
+        "PredictedClass",
+    ]
+    nodeBuilder.imagePackageParser(
+        imagePackage, "1f8f41bd0ea9214b93c834cc4e28209191a2964101fdc84c823b9b9191b5ead6"
+    )
 
-    #mainNode = "Titan65 engine"
-    #nodeTracebackManual() #This is for testing not when the analyzer calls very similiar function nodeTraceback which is used to send a message to the dashboard about the main node.
+    # mainNode = "Titan65 engine"
+    # nodeTracebackManual() #This is for testing not when the analyzer calls very similiar function nodeTraceback which is used to send a message to the dashboard about the main node.
     # for eachItem in package:
-    #     #assign variable here 
+    #     #assign variable here
     #     node1, relation, node2 = eachItem
     #     #node1 = F22+DT+Aircraft
     #     node1array =  node1.split("+")
