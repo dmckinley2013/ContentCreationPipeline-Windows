@@ -17,52 +17,6 @@ def getAllNodes():
             print(node)
 
 
-def nodesRelation():
-    # Create a driver instance
-    driver = GraphDatabase.driver(URI, auth=AUTH)
-
-    try:
-        with driver.session() as session:
-            nodeToLookFor = input(f"Enter the name of the node to search: ")
-
-            # Query to find the node
-            query = """MATCH (tNode:digitalTwin {name: $nodeToLookFor}) RETURN tNode"""
-            result = session.run(query, {"nodeToLookFor": nodeToLookFor})
-
-            found_any = False
-
-            for record in result:
-                tNode = record["tNode"]
-                print("Node found:", tNode)  # Debugging: Print the node details
-                found_any = True
-
-                # Query for relationships from this node
-                queryFindRelationFrom = """
-                MATCH (tNode {name: $nodeName})-[r]->(connectedNode)
-                RETURN tNode, type(r) AS relationshipType, connectedNode
-                """
-
-                # Run the query to find relationships
-                resultNew = session.run(
-                    queryFindRelationFrom, {"nodeName": nodeToLookFor}
-                )
-
-                # Print the relationships
-                for relRecord in resultNew:
-                    tNode = relRecord["tNode"]
-                    relationshipType = relRecord["relationshipType"]
-                    connectedNode = relRecord["connectedNode"]
-
-                    print(
-                        f"Node: {tNode['name']} -> [{relationshipType}] -> {connectedNode['name']}"
-                    )
-
-            if not found_any:
-                print("No Relationships were found")
-
-    finally:
-        # Ensure the driver is closed
-        driver.close()
 
 
 def nodeTraceback(learnerObject, contentID):
@@ -223,7 +177,7 @@ def nodeTracebackManual():
         print(relationMessage)
 
 
-def updateNodes():
+
     with driver.session() as session:
         print("Executing query to find node with name ' GE414'...")
         nodeToLookFor = input(f"Enter the name of the node to update: ")
@@ -353,7 +307,7 @@ def addImageLearner(node1array, relation, mainContentID):
 # nodes_relation = ["F18, ENGINE_OF, G414", "Boeing, ENGINE_OF, RR304"]
 
 
-def store_relationship():
+
     relationships = []  # array to store relationships
 
     # First object input from user
@@ -465,7 +419,7 @@ if __name__ == "__main__":
         ["In addition", "digitalTwin", "Aircraft"],
     ]
 
-    # package = [['docName', 'learnerObject', 'pdf'],['learnerObject'], ['FE718 engine', 'digitalTwin', 'Engine']]
+    
     # nodeBuilder.packageParser(package)
     imagePackage = [
         "Test Image 3",
@@ -479,20 +433,3 @@ if __name__ == "__main__":
         imagePackage, "1f8f41bd0ea9214b93c834cc4e28209191a2964101fdc84c823b9b9191b5ead6"
     )
 
-    # mainNode = "Titan65 engine"
-    # nodeTracebackManual() #This is for testing not when the analyzer calls very similiar function nodeTraceback which is used to send a message to the dashboard about the main node.
-    # for eachItem in package:
-    #     #assign variable here
-    #     node1, relation, node2 = eachItem
-    #     #node1 = F22+DT+Aircraft
-    #     node1array =  node1.split("+")
-    #     node2array = node2.split("+")
-
-    #     print(node1array)
-    #     print(node2array)
-    #     # print(node1)
-    #     # print(node2)
-
-    #     add2nodesRelation(driver,node1array,relation,node2array)
-    # nodesRelation()
-    # nodeTraceback()
