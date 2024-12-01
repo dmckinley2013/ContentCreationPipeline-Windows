@@ -83,7 +83,7 @@ def nodeTraceback(learnerObject, contentID):
 
                         relationMessage.append(relationship_string)
         relationMessageString = ", ".join(relationMessage)
-        print(relationMessageString)
+        # print(relationMessageString)
         print("STATUS FEED CALLED HERE")
         statusFeed.messageBuilder(
             learnerObject,
@@ -281,14 +281,16 @@ def addImageLearner(node1array, relation, mainContentID):
 
         with driver.session() as session:
             query = f"""
-                MERGE (node1:`{learnerObject}`:`{mediaType}` {{name: $nameofNode1}})
-                ON CREATE SET node1.contentID = $contentID, 
-                              node1.location = $location, 
-                              node1.predictedClass = $predictedClass
+                CREATE (node1:`{learnerObject}`:`{mediaType}` {{
+                    name: $nameofNode1,
+                    contentID: $contentID,
+                    location: $location,
+                    predictedClass: $predictedClass
+                }})
                 MERGE (node2 {{contentID: $mainContentID}})
                 ON CREATE SET node2.missionProfile = $missionProfile2
-                MERGE (node1)<-[:`has_{relation}`]-(node2)
-                MERGE (node2)<-[:`{relation}_of`]-(node1)
+                CREATE (node1)<-[:`has_{relation}`]-(node2)
+                CREATE (node2)<-[:`{relation}_of`]-(node1)
             """
 
             session.run(
@@ -304,45 +306,12 @@ def addImageLearner(node1array, relation, mainContentID):
             )
 
 
+
 # nodes_relation = ["F18, ENGINE_OF, G414", "Boeing, ENGINE_OF, RR304"]
 
 
 
-    relationships = []  # array to store relationships
-
-    # First object input from user
-    nameofNode1 = input("Enter object: ")
-
-    # Loop
-    while True:
-        # Input for the relationship and the next object
-        relationship = input(f"Enter the relationship for '{nameofNode1}': ")
-        nameofNode2 = input(f"Enter the next object: ")
-
-        # Stores and formats inputted string into the relationships list
-        relationship_string = f"{nameofNode1},{relationship},{nameofNode2}"
-        relationships.append(relationship_string)
-
-        # Prompts user to enter more objects or end input
-        additional_input = input(
-            "Do you want to add another object? (yes or no): "
-        ).lower()
-
-        # Ends process if the user says 'no more'
-        if additional_input == "no":
-            break
-
-        # Moves to next object in the loop
-        nameofNode1 = nameofNode2
-
-    # Output the relationships and nodes array
-    # print("Relationships and nodes array:")
-    # print(relationships)
-    return relationships
-
-
-# MAKE DELETE FUNCTION FOR NODES and Relation
-
+    
 
 class nodeBuilder:
     def imagePackageParser(package, contentID):
@@ -405,7 +374,7 @@ class nodeBuilder:
             # Update size after modifying package
             size = len(package)
 
-        nodeTraceback(learnerObject, contentID)
+        # nodeTraceback(learnerObject, contentID)
 
 
 if __name__ == "__main__":
