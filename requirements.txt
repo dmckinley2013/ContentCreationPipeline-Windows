@@ -10,11 +10,19 @@ python-socketio==5.11.3
 python-engineio==4.9.1
 
 # Database and Data Handling
-dnspython==2.6.1  
+dnspython==2.6.1
+neo4j>=5.14.0
+#pymongo-bson==4.9.1  # Added this specifically for BSON support
 
 # Machine Learning and Processing
 spacy==3.5.4
 en-core-web-lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.5.0/en_core_web_lg-3.5.0-py3-none-any.whl
+transformers>=4.36.0
+
+# API and Web Frameworks
+fastapi>=0.109.0
+uvicorn>=0.27.0
+python-multipart>=0.0.6
 
 # Image Processing
 Pillow==10.3.0
