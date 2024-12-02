@@ -1,5 +1,5 @@
 from neo4j import GraphDatabase
-from statusfeed1 import statusFeed
+from statusfeed import statusFeed
 
 
 URI = "neo4j://localhost:7687"
@@ -294,6 +294,14 @@ def addImageLearner(node1array, relation, mainContentID):
                     "mainContentID": mainContentID,
                     "missionProfile2": "Default Mission Profile",  # Update with actual mission profile if available
                 },
+            )
+            
+            print("STATUS FEED CALLED HERE")
+            statusFeed.messageBuilder(
+                node1array[0],
+                mainContentID,
+                "Images has been stored and classified",
+                predictedClass,
             )
 
 

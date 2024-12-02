@@ -3,43 +3,39 @@ import bson
 import hashlib
 import datetime
 import random
-import logging
-from publisher import publish_to_rabbitmq
+from bson import ObjectId
+from publisher import publish_to_rabbitmq  # to make messageSender functional
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class statusFeed:
     @staticmethod
-    def messageBuilder(content_ID, statusMessage, details):
-        print("Inside Message Builder")
-        try:
-            messageID = str(random.random())
-            cts = datetime.datetime.now()
-            format_cts = cts.strftime('%m/%d/%Y, %I:%M:%S %p')
+    def messageBuilder(learnerObjectFile,content_ID, statusMessage, details):
+        # Generate IDs and timestamps
+        job_id = str(ObjectId())
+        content_id = content_ID  # Provided as parameter
+        timestamp = datetime.datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p')
 
-            job = {
-                "JobID": messageID,
-                "contentID": content_ID,
-                "Status": statusMessage,
-                "time": format_cts,  # Using consistent time format
-                "details": details,
-                "message": f"Status update for content {content_ID}"
-            }
-            
-            logging.info(f"Built status message for content {content_ID}")
-            messageSender(job)
-            
-        except Exception as e:
-            logging.error(f"Error building message: {e}")
-            raise
+        # Construct the message in the required format
+        print("THIS IS NUTS")
+        print(content_id)
+        job = {
+            'time': timestamp,
+            'job_id': job_id,
+            'content_id': content_id,
+            'media_id': "N/A",
+            'content_type': 'Status Message',  # Default; adjust as needed
+            'file_name': learnerObjectFile,
+            'status': statusMessage,
+            'message':details,
+            '_id': ObjectId()
+        }
+        print(f"Generated job: {job}")
 
-def messageSender(bsonObj):
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("localhost", 12346))
-        s.sendall(bson.encode(bsonObj))
-        s.close()
-        logging.info(f"Status message sent for job {bsonObj.get('JobID')}")
-    except Exception as e:
-        logging.error(f"Error sending message: {e}")
-        raise 
+        # Send back to messageSender
+        messageSender(job)
+
+
+# This sends to our RabbitMQ publisher
+def messageSender(job):
+    # Send job to RabbitMQ
+    publish_to_rabbitmq('.Status.', job)

@@ -14,7 +14,7 @@ sys.path.append(
 )
 
 
-from image_module import ImageClassifier
+# from image_module import ImageClassifier
 
 
 
