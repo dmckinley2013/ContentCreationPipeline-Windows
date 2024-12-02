@@ -16,85 +16,76 @@ def getAllNodes():
             node = record["n"]
             print(node)
 
-
-
+import logging
+from neo4j import GraphDatabase, exceptions
+from neo4j.exceptions import Neo4jError, CypherSyntaxError
 
 def nodeTraceback(learnerObject, contentID):
-    driver = GraphDatabase.driver(URI, auth=AUTH)
+    try:
+        driver = GraphDatabase.driver(URI, auth=AUTH)
+    except exceptions.ServiceUnavailable as e:
+        logging.error(f"Could not connect to the database: {e}")
+        return
+
     with driver.session() as session:
-        # The node to look for is passed as a parameter
         nodeToLookFor = learnerObject
 
-        # Query to check if the node exists
-        query = """MATCH (n {name: $nodeToLookFor}) RETURN n"""
-        result = session.run(query, {"nodeToLookFor": nodeToLookFor})
+        query = """
+        MATCH (node {name: $nodeToLookFor})-[r]-(connectedNode)
+        WHERE NOT (type(r) IN ['has_Image', 'Image_of'])
+          AND (
+            NOT (type(r) IN ['learnerObject_of', 'has_learnerObject']) 
+            OR $nodeToLookFor IN [node.name, connectedNode.name]
+          )
+        RETURN node, r, connectedNode
+        """
+        try:
+            result = session.run(query, {"nodeToLookFor": nodeToLookFor})
+        except CypherSyntaxError as e:
+            logging.error(f"Cypher syntax error: {e}")
+            return
+        except Neo4jError as e:
+            logging.error(f"Neo4j error: {e}")
+            return
 
         found_any = False
-        printed_relationships = set()  # Set to track printed relationships
+        printed_relationships = set()
         relationMessage = []
-        for record in result:
-            tNode = record["n"]
-            print("Node found:", tNode)  # Debugging: Print the node details
-            found_any = True
 
-            # Query to find all paths leading to and from the specified node
-            queryFindRelations = """
-            MATCH path = (node {name: $nodeToLookFor})-[*]-(connectedNode)
-            RETURN node, nodes(path) AS nodeChain, relationships(path) AS relationChain
-            """
-            resultRelations = session.run(
-                queryFindRelations, {"nodeToLookFor": nodeToLookFor}
+        for record in result:
+            found_any = True
+            node = record["node"]
+            r = record["r"]
+            connectedNode = record["connectedNode"]
+
+            relationshipType = r.type
+            fromNodeName = node["name"]
+            toNodeName = connectedNode["name"]
+
+            # Normalize relationships for deduplication
+            relationship_key = tuple(sorted([fromNodeName, toNodeName]))
+            relationship_string = (
+                f"{fromNodeName} - [{relationshipType}] -> {toNodeName}"
+                if fromNodeName == nodeToLookFor
+                else f"{toNodeName} <- [{relationshipType}] - {fromNodeName}"
             )
 
-            # Process each path and deduplicate relationships
-            for path in resultRelations:
-                nodeChain = path["nodeChain"]  # List of nodes along the path
-                relationChain = path[
-                    "relationChain"
-                ]  # List of relationships along the path
+            if (relationship_key, relationshipType) not in printed_relationships:
+                print(relationship_string)
+                printed_relationships.add((relationship_key, relationshipType))
+                relationMessage.append(relationship_string)
 
-                for i in range(len(relationChain)):
-                    fromNode = nodeChain[i]
-                    toNode = nodeChain[i + 1]
-                    relationshipType = relationChain[
-                        i
-                    ].type  # Get the type of the relationship
-
-                    # Ignore `learnerObject` relationships unless involving the specified node
-                    if relationshipType in ["learnerObject_of", "has_learnerObject"]:
-                        if nodeToLookFor not in [fromNode["name"], toNode["name"]]:
-                            continue  # Skip irrelevant learnerObject relationships
-
-                    # Normalize relationships for deduplication
-                    relationship_key = tuple(sorted([fromNode["name"], toNode["name"]]))
-                    relationship_string = (
-                        f"{fromNode['name']} - [{relationshipType}] -> {toNode['name']}"
-                        if fromNode["name"] == nodeToLookFor
-                        else f"{toNode['name']} <- [{relationshipType}] - {fromNode['name']}"
-                    )
-
-                    # Print only if the relationship is unique
-                    if (
-                        relationship_key,
-                        relationshipType,
-                    ) not in printed_relationships:
-                        print(relationship_string)
-                        printed_relationships.add((relationship_key, relationshipType))
-
-                        relationMessage.append(relationship_string)
         relationMessageString = ", ".join(relationMessage)
-        # print(relationMessageString)
         print("STATUS FEED CALLED HERE")
         statusFeed.messageBuilder(
             learnerObject,
             contentID,
-            "Nodes and relations have been stored to Neo4j ",
+            "Nodes and relations have been stored to Neo4j",
             relationMessageString,
         )
 
         if not found_any:
-            print("No node found with the specified name.")
-
+            logging.info("No node found with the specified name.")
 
 def nodeTracebackManual():
     driver = GraphDatabase.driver(URI, auth=AUTH)
@@ -374,7 +365,7 @@ class nodeBuilder:
             # Update size after modifying package
             size = len(package)
 
-        # nodeTraceback(learnerObject, contentID)
+        nodeTraceback(learnerObject, contentID)
 
 
 if __name__ == "__main__":
