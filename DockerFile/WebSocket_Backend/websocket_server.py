@@ -5,12 +5,15 @@ import pika
 from bson import BSON, ObjectId
 from db_handler import DBHandler
 from datetime import datetime
+import psutil
+
 class WebSocketServer:
     def __init__(self):
         self.connected_clients = set()
         self.db_handler = DBHandler()
         self.db_handler.init_db()
         self.message_queue = asyncio.Queue()
+        self.start_time = datetime.now()
 
     def convert_bson_to_json(self, data):
         if isinstance(data, bytes):
@@ -34,7 +37,7 @@ class WebSocketServer:
                 }
             return {k: self.convert_bson_to_json(v) for k, v in data.items()}
         elif isinstance(data, list):
-            return [self.convert_bson_to_json(item) for item in items]
+            return [self.convert_bson_to_json(item) for item in data]
         return data
 
     def _determine_content_type(self, data):
@@ -79,6 +82,16 @@ class WebSocketServer:
             async for message in websocket:
                 try:
                     message_data = json.loads(message)
+
+                    if message_data.get('type') == 'getAnalytics':
+                        analytics_data = await self.get_analytics_data()
+                        await websocket.send(json.dumps({
+                            'type': 'analytics',
+                            'data': analytics_data
+                        }))
+                        print("Analytics response sent")
+                        continue
+
                     json_message = self.convert_bson_to_json(message_data)
                     
                     # Save the message to the database
@@ -176,6 +189,61 @@ class WebSocketServer:
         
         print("WebSocket server started on ws://localhost:5001")
         await server.wait_closed()
+
+    async def get_analytics_data(self):
+        messages = self.db_handler.load_messages()
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+
+        # Network metrics
+        network = psutil.net_io_counters()
+        bytes_sent = network.bytes_sent
+        bytes_recv = network.bytes_recv
+
+        response_times = []
+
+        for msg in messages:
+            try:
+                received_time = datetime.strptime(msg['time'], '%m/%d/%Y, %I:%M:%S %p')
+                processed_time = datetime.strptime(msg['processed_time'], '%m/%d/%Y, %I:%M:%S %p')
+                response_times.append((processed_time - received_time).total_seconds())
+            except (KeyError, ValueError):
+                continue
+
+        avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+
+        analytics = {
+            'performanceStats': {
+                'peakThroughput': len(messages),
+                'currentLoad': len(self.connected_clients),
+                'uptime': (datetime.now() - self.start_time).total_seconds(),
+                'cpuUtilization': cpu_percent,
+                'memoryUsage': memory.percent,
+                'diskUsage': disk.percent,
+                'processCount': len(psutil.pids()),
+                'networkStats': {
+                    'bytesSent': bytes_sent,
+                    'bytesReceived': bytes_recv,
+                    'activeConnections': len(self.connected_clients),
+                    'messageRate': len(messages) / max(1, (datetime.now() - self.start_time).total_seconds())
+                }
+            },
+            'fileStats': {
+                'totalFilesProcessed': len(messages),
+                'fileTypeDistribution': {
+                    'Document': sum(1 for m in messages if m.get('content_type') == 'Document'),
+                    'Image': sum(1 for m in messages if m.get('content_type') in ['Image', 'Picture']),
+                    'Audio': sum(1 for m in messages if m.get('content_type') == 'Audio')
+                }
+            },
+            'systemHealth': {
+                'activeConnections': len(self.connected_clients),
+                'queueDepth': len(messages),
+                'successRate': 100 * sum(1 for m in messages if m.get('status') == 'Processed') / len(messages) if messages else 100
+            }
+        }
+        return analytics
 
 if __name__ == "__main__":
     server = WebSocketServer()
