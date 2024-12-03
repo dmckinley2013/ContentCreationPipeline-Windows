@@ -1,0 +1,18 @@
+Demo
+
+
+
+For this demo, I’ll be uploading a document into the content creation pipeline. The pipeline’s components
+communicate through a message broker system that was already in place before our group started. 
+Our group’s task was to build the metadata module. This module uses a fine-tuned SpaCy model to extract 
+entities from the document summary. Based on these entities, our code establishes the relationships 
+between them and attaches learner objects like PDFs and images. 
+All of this is stored in a Neo4j graph database, creating a structured knowledge graph that connects the entities,
+their relationships, and their associated content.
+
+
+
+We should expect to see 7 messages in the dashboard queue 
+One folder containing all associated components orginating from the uploaded media - which is tracked through
+the content ID
+Nodes being stored to Neo4j

@@ -25,7 +25,7 @@ sys.path.append(
 
 from analyzer import entityRelationExtraction
 from recNparse import MessageProcessor
-from image_module import ImageClassifier
+from image_moduleMac import ImageClassifier
 
 
 # from image_module import ImageProcessor
