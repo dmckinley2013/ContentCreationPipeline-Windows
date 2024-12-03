@@ -20,8 +20,8 @@ neo4j>=5.14.0
 
 
 # Machine Learning and Processing
-spacy==3.5.4
-en-core-web-lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.5.0/en_core_web_lg-3.5.0-py3-none-any.whl
+#spacy==3.5.4
+#en-core-web-lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.5.0/en_core_web_lg-3.5.0-py3-none-any.whl
 transformers>=4.36.0
 
 # API and Web Frameworks
