@@ -120,22 +120,24 @@ async def upload_files(
 
     if job["NumberOfDocuments"] > 0:
         for document in job["Documents"]:
+            document["ID"] = job["ID"]
             document["content_id"] = job["ID"]
             document["DocumentId"] = compute_unique_id(document)
-
+            
     if job["NumberOfImages"] > 0:
         for image in job["Images"]:
             image["ID"] = job["ID"]
             image["content_id"] = job["ID"]
-
+            image['PictureID'] = compute_unique_id(image)
     if job["NumberOfAudio"] > 0:
         for audio in job["Audio"]:
+            audio["ID"] = job["ID"]
             audio["content_id"] = job["ID"]
             audio["AudioID"] = compute_unique_id(audio)
-
     if job["NumberOfVideo"] > 0:
         for video in job["Video"]:
             video["ID"] = job["ID"]
+            audio["content_id"] = job["ID"]
             video["VideoID"] = compute_unique_id(video)
 
     # Send to existing socket service

@@ -118,13 +118,18 @@ class ImageClassifier:
                 print(
                     f"Classification results - Class: {predicted_class}, Confidence: {confidence_score:.2f}"
                 )
+
+                predictedString = (f"{predicted_class}, Confidence: {confidence_score:.2f}")
+
+
+
                 imageLearner = [
                     file_name,
                     "learnerObject",
                     "Image",
-                    "Location_path",
+                    target_folder,
                     content_id,
-                    "PredictedClass",
+                    predictedString,
                 ]
                 imageNodes.append(imageLearner)
 

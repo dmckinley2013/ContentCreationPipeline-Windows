@@ -34,26 +34,26 @@ TRAIN_DATA = [
     ("The M761 tank uses a Titan65 engine.", {"entities": [(4, 13, "digitalTwinGround"), (21, 35, "digitalTwinEngine")]}),
 
     # New data
-    ("The F22 aircraft features the advanced GE556 engine.", {"entities": [(4, 16, "digitalTwinAircraft"), (36, 48, "digitalTwinEngine")]}),
-    ("Regular maintenance is required for the Titan65 engine and the M761 tank.", {"entities": [(35, 48, "digitalTwinEngine"), (57, 66, "digitalTwinGround")]}),
+    ("The F22 aircraft features the advanced GE556 engine.", {"entities": [(4, 16, "digitalTwinAircraft"), (39, 51, "digitalTwinEngine")]}),
+    ("Regular maintenance is required for the Titan65 engine and the M761 tank.", {"entities": [(40, 54, "digitalTwinEngine"), (63, 72, "digitalTwinGround")]}),
    
     ("The GE414 engine is used in both commercial and military aircraft.", {"entities": [(4, 16, "digitalTwinEngine")]}),
-    ("The M551 tank is equipped with a powerful Titan88 engine.", {"entities": [(4, 13, "digitalTwinGround"), (38, 49, "digitalTwinEngine")]}),
-    ("Titan88 engines are known for their durability in harsh conditions.", {"entities": [(0, 10, "digitalTwinEngine")]}),
-    ("The M551 tank uses a GE404 engine for enhanced performance.", {"entities": [(4, 13, "digitalTwinGround"), (21, 31, "digitalTwinEngine")]}),
-    ("Maintenance for the F16 aircraft includes checking the GE554 engine.", {"entities": [(21, 33, "digitalTwinAircraft"), (52, 63, "digitalTwinEngine")]}),
-    ("The M761 tank is built to withstand tough conditions, using the Titan65 engine.", {"entities": [(4, 13, "digitalTwinGround"), (60, 74, "digitalTwinEngine")]}),
-    ("The F35 aircraft relies on the GE600 engine for superior performance.", {"entities": [(4, 16, "digitalTwinAircraft"), (33, 43, "digitalTwinEngine")]}),
+    ("The M551 tank is equipped with a powerful Titan88 engine.", {"entities": [(4, 13, "digitalTwinGround"), (42, 56, "digitalTwinEngine")]}),
+    ("Titan88 engines are known for their durability in harsh conditions.", {"entities": [(0, 15, "digitalTwinEngine")]}),
+    ("The M551 tank uses a GE404 engine for enhanced performance.", {"entities": [(4, 13, "digitalTwinGround"), (21, 33, "digitalTwinEngine")]}),
+    ("Maintenance for the F16 aircraft includes checking the GE554 engine.", {"entities": [(20, 32, "digitalTwinAircraft"), (55, 67, "digitalTwinEngine")]}),
+    ("The M761 tank is built to withstand tough conditions, using the Titan65 engine.", {"entities": [(4, 13, "digitalTwinGround"), (64, 78, "digitalTwinEngine")]}),
+    ("The F35 aircraft relies on the GE600 engine for superior performance.", {"entities": [(4, 16, "digitalTwinAircraft"), (31, 43, "digitalTwinEngine")]}),
     
-    ("The M551 tank with the new GE509 engine has significantly improved its power.", {"entities": [(4, 13, "digitalTwinGround"), (24, 35, "digitalTwinEngine")]}),
-    ("The GE509 engine powers various vehicles, including tanks and aircraft.", {"entities": [(4, 14, "digitalTwinEngine")]}),
-    ("The F16 aircraft and the F18 aircraft both use GE414 engines.", {"entities": [(4, 16, "digitalTwinAircraft"), (26, 38, "digitalTwinAircraft"), (49, 61, "digitalTwinEngine")]}),
-    ("The M761 tank and the M551 tank rely on different engines, including the Titan65.", {"entities": [(4, 13, "digitalTwinGround"), (24, 33, "digitalTwinGround"), (69, 77, "digitalTwinEngine")]}),
-    ("GE900 engines are used in the latest aircraft models for superior power.", {"entities": [(0, 9, "digitalTwinEngine")]}),
-    ("The F22 aircraft and the F35 aircraft both utilize GE600 engines for enhanced speed.", {"entities": [(4, 16, "digitalTwinAircraft"), (26, 38, "digitalTwinAircraft"), (49, 59, "digitalTwinEngine")]}),
-    ("Titan88 engines have been used in both the M551 and M761 tanks.", {"entities": [(0, 10, "digitalTwinEngine"), (39, 48, "digitalTwinGround"), (53, 62, "digitalTwinGround")]}),
-    ("The GE509 engine is a newly developed model for modern military vehicles.", {"entities": [(4, 14, "digitalTwinEngine")]}),
-    ("Routine checks for the F35 aircraft involve inspecting the GE600 engine.", {"entities": [(19, 31, "digitalTwinAircraft"), (50, 60, "digitalTwinEngine")]}),
+    ("The M551 tank with the new GE509 engine has significantly improved its power.", {"entities": [(4, 13, "digitalTwinGround"), (27, 39, "digitalTwinEngine")]}),
+    ("The GE509 engine powers various vehicles, including tanks and aircraft.", {"entities": [(4, 16, "digitalTwinEngine")]}),
+    ("The F16 aircraft and the F18 aircraft both use GE414 engines.", {"entities": [(4, 16, "digitalTwinAircraft"), (25, 37, "digitalTwinAircraft"), (47, 60, "digitalTwinEngine")]}),
+    ("The M761 tank and the M551 tank rely on different engines, including the Titan65.", {"entities": [(4, 13, "digitalTwinGround"), (22, 31, "digitalTwinGround"), (73, 80, "digitalTwinEngine")]}),
+    ("GE900 engines are used in the latest aircraft models for superior power.", {"entities": [(0, 13, "digitalTwinEngine")]}),
+    ("The F22 aircraft and the F35 aircraft both utilize GE600 engines for enhanced speed.", {"entities": [(4, 16, "digitalTwinAircraft"), (25, 37, "digitalTwinAircraft"), (51, 64, "digitalTwinEngine")]}),
+    ("Titan88 engines have been used in both the M551 and M761 tanks.", {"entities": [(0, 15, "digitalTwinEngine"), (43, 47, "digitalTwinGround"), (52, 62, "digitalTwinGround")]}),
+    ("The GE509 engine is a newly developed model for modern military vehicles.", {"entities": [(4, 16, "digitalTwinEngine")]}),
+    ("Routine checks for the F35 aircraft involve inspecting the GE600 engine.", {"entities": [(23, 35, "digitalTwinAircraft"), (59, 71, "digitalTwinEngine")]}),
      ("The turbine is in good condition.", {"entities": []}),
      ('Torque settings', {'entities': []}),
     ("Regular maintenance of the compressor is required.", {"entities": []}),
@@ -61,6 +61,8 @@ TRAIN_DATA = [
     ('The DG5000 generators, responsible for electricity generation', {'entities': [(4, 21, 'digitalTwinElectricGenerator')]}),
     ('The STFD650 steam turbines power the USS Missouri', {'entities': [(4, 26, 'digitalTwinEngine'), (37, 49, 'digitalTwinMarine')]}),
     ('The STFD650 steam turbines is the engine of the USS Missouri', {'entities': [(4, 26, 'digitalTwinEngine'), (48, 60, 'digitalTwinMarine')]})
+
+    
 
     
 ]

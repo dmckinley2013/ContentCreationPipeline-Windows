@@ -8,11 +8,11 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 # Define the commands with their respective directories
 commands = [
     # ("docker-compose up --build -d", base_dir),
-    ("python parse.py", os.path.join(base_dir, "Parser_Module")),
+    ("python3 parse.py", os.path.join(base_dir, "Parser_Module")),
     ("node server.js", os.path.join(base_dir, "WebSocket_Backend")),
-    ("python websocket_server.py", os.path.join(base_dir, "WebSocket_Backend")),
-    ("npm start", os.path.join(base_dir, "react_frontend")),
-    ("python metabackendmac.py", os.path.join(base_dir, "Metadata_Module")),
+    ("python3 websocket_server.py", os.path.join(base_dir, "WebSocket_Backend")),
+    ("export NODE_OPTIONS=--openssl-legacy-provider && npm start", os.path.join(base_dir, "react_frontend")),
+    ("python3 metabackendmac.py", os.path.join(base_dir, "Metadata_Module")),
     ("uvicorn file_uploader_backend:app --reload", os.path.join(base_dir, "Main_Server"))
 ]
 
@@ -22,15 +22,13 @@ processes = []
 def run_command(cmd, work_dir, wait_time=0):
     """Runs a command in a specific directory and optionally waits."""
     print(f"\nStarting: {cmd} in {work_dir}")
-    # Use shell=True for Windows; no executable needed
-    process = subprocess.Popen(cmd, shell=True, cwd=work_dir)
+    process = subprocess.Popen(cmd, shell=True, cwd=work_dir, executable='/bin/bash')  # Ensure it runs in a bash shell
     processes.append(process)
     
     # Add a delay if specified
     if wait_time > 0:
         print(f"Waiting for {wait_time} seconds...")
         time.sleep(wait_time)
-    
 
 def shutdown_all():
     """Gracefully shuts down all running processes and Docker containers."""
@@ -58,11 +56,11 @@ try:
     # run_command("docker-compose up --build -d", base_dir, wait_time=45)
 
     # Run the rest of the commands in sequence
-    run_command("python parse.py", os.path.join(base_dir, "Parser_Module"))
+    run_command("python3 parse.py", os.path.join(base_dir, "Parser_Module"))
     run_command("node server.js", os.path.join(base_dir, "WebSocket_Backend"))
-    run_command("python websocket_server.py", os.path.join(base_dir, "WebSocket_Backend"))
-    run_command("npm start", os.path.join(base_dir, "react_frontend"))
-    run_command("python metabackendmac.py", os.path.join(base_dir, "Metadata_Module"))
+    run_command("python3 websocket_server.py", os.path.join(base_dir, "WebSocket_Backend"))
+    run_command("export NODE_OPTIONS=--openssl-legacy-provider && npm start", os.path.join(base_dir, "react_frontend"))
+    run_command("python3 metabackendmac.py", os.path.join(base_dir, "Metadata_Module"))
     run_command("uvicorn file_uploader_backend:app --reload", os.path.join(base_dir, "Main_Server"))
 
     # Wait for the React UI process to finish

@@ -1,4 +1,5 @@
 import spacy
+import re
 
 # Load a blank English model
 nlp = spacy.blank("en")
@@ -49,41 +50,63 @@ sentences = [
 
 phrases_to_index = {
     "GE414 engine": "digitalTwinEngine",
+    "GE414 engines": "digitalTwinEngine",
     "F18 aircraft": "digitalTwinAircraft",
+    "F18 aircrafts": "digitalTwinAircraft",
     "GE54 engine": "digitalTwinEngine",
+    "GE54 engines": "digitalTwinEngine",
     "F16 aircraft": "digitalTwinAircraft",
+    "F16 aircrafts": "digitalTwinAircraft",
     "GE401 engine": "digitalTwinEngine",
+    "GE401 engines": "digitalTwinEngine",
     "GE534 engine": "digitalTwinEngine",
+    "GE534 engines": "digitalTwinEngine",
     "M761 tank": "digitalTwinGround",
+    "M761 tanks": "digitalTwinGround",
     "Titan65 engine": "digitalTwinEngine",
+    "Titan65 engines": "digitalTwinEngine",
     "F22 aircraft": "digitalTwinAircraft",
+    "F22 aircrafts": "digitalTwinAircraft",
     "GE556 engine": "digitalTwinEngine",
+    "GE556 engines": "digitalTwinEngine",
     "M551 tank": "digitalTwinGround",
+    "M551 tanks": "digitalTwinGround",
     "Titan88 engine": "digitalTwinEngine",
+    "Titan88 engines": "digitalTwinEngine",
     "GE404 engine": "digitalTwinEngine",
+    "GE404 engines": "digitalTwinEngine",
     "GE554 engine": "digitalTwinEngine",
+    "GE554 engines": "digitalTwinEngine",
     "F35 aircraft": "digitalTwinAircraft",
+    "F35 aircrafts": "digitalTwinAircraft",
     "GE600 engine": "digitalTwinEngine",
+    "GE600 engines": "digitalTwinEngine",
     "GE509 engine": "digitalTwinEngine",
+    "GE509 engines": "digitalTwinEngine",
     "GE900 engine": "digitalTwinEngine",
+    "GE900 engines": "digitalTwinEngine",
+    "DG5000 steam generator": "digitalTwinElectricGenerator",
     "DG5000 steam generators": "digitalTwinElectricGenerator",
     "USS Missouri battleship": "digitalTwinMarine",
+    "USS Missouri battleships": "digitalTwinMarine",
+    "STFD650 steam turbine": "digitalTwinEngine",
     "STFD650 steam turbines": "digitalTwinEngine"
 }
+
 # Initialize a list to store training data
 training_data = []
 
 # Process each sentence
 for sentence in sentences:
-    doc = nlp(sentence)
     entities = []
 
     # Search for each phrase in the sentence
     for phrase, label in phrases_to_index.items():
-        start_index = sentence.find(phrase)
-        if start_index != -1:
-            # Calculate the end index of the phrase
-            end_index = start_index + len(phrase)
+        # Use regex for exact match with word boundaries
+        match = re.search(rf'\b{re.escape(phrase)}\b', sentence)
+        if match:
+            start_index = match.start()
+            end_index = match.end()
             entities.append((start_index, end_index, label))
 
     # Add the sentence and its entities to the training data
