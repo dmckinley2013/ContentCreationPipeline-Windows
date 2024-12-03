@@ -1,29 +1,155 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
 
+// Create MetricCard component
+const MetricCard = ({ title, value }) => (
+    <div className="metric-card">
+        <h4>{title}</h4>
+        <p>{value}</p>
+    </div>
+);
+
+const normalizeContentType = (type) => {
+    return type === 'Picture' ? 'Image' : type;
+};
+
+const truncateId = (id) => {
+    if (!id) return '';
+    return id.length > 10 ? `...${id.slice(-10)}` : id;
+};
+
 const Dashboard = () => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isConnected, setIsConnected] = useState(false);
     const ws = useRef(null);
     const [truncatedContentIds, setTruncatedContentIds] = useState({});
-
-
     const [expandedContentIds, setExpandedContentIds] = useState([]);
-
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [selectedContentType, setSelectedContentType] = useState('All');
+    const [showAnalytics, setShowAnalytics] = useState(false);
+    const chartRef = useRef(null);
 
-    // Helper function to truncate IDs
-    const truncateId = (id) => {
-        if (!id) return '';
-        return id.length > 10 ? `...${id.slice(-10)}` : id;
+    const [performanceStats, setPerformanceStats] = useState({
+        averageResponseTime: 0,
+        cpuUtilization: 0,
+        memoryUsage: 0,
+        currentLoad: 0,
+        uptime: 0,
+        networkStats: {
+            bytesSent: 0,
+            bytesReceived: 0,
+            activeConnections: 0,
+            messageRate: 0
+        }
+    });
+
+    const [fileStats, setFileStats] = useState({
+        totalFilesProcessed: 0,
+        fileTypeDistribution: {
+            Document: 0,
+            Image: 0,
+            Audio: 0
+        }
+    });
+
+    const [systemHealth, setSystemHealth] = useState({
+        activeConnections: 0,
+        queueDepth: 0,
+        memoryUsage: 0,
+        successRate: 100
+    });
+
+    const requestAnalytics = () => {
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify({type: 'getAnalytics'}));
+        }
     };
 
-    const normalizeContentType = (type) => {
-        return type === 'Picture' ? 'Image' : type;
+    const handleAnalyticsClick = (event) => {
+        console.log("Button clicked:", event);
+        console.log("Socket state before:", {
+            readyState: ws.current?.readyState,
+            isConnected: isConnected
+        });
+
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            const analyticsRequest = {type: 'getAnalytics'};
+            console.log("Sending request:", analyticsRequest);
+            ws.current.send(JSON.stringify(analyticsRequest));
+        }
+
+        console.log("Current analytics state:", showAnalytics);
+        setShowAnalytics(!showAnalytics);
+        console.log("New analytics state:", !showAnalytics);
+    };
+
+    useEffect(() => {
+        if (showAnalytics) {
+            requestAnalytics();
+            const interval = setInterval(requestAnalytics, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [showAnalytics]);
+
+    useEffect(() => {
+        const connectWebSocket = () => {
+            ws.current = new WebSocket('ws://localhost:5001');
+
+            ws.current.onopen = () => {
+                console.log('WebSocket connected');
+                setIsConnected(true);
+            };
+
+            ws.current.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('WebSocket data received:', data);
+
+                    if (data.type === 'initialMessages') {
+                        setMessages([...data.data]);
+                        setLoading(false);
+                    } else if (data.type === 'newMessage') {
+                        setMessages(prevMessages => [data.data, ...prevMessages]);
+                    } else if (data.type === 'analytics') {
+                        setPerformanceStats(data.performanceStats);
+                        setFileStats(data.fileStats);
+                        setSystemHealth(data.systemHealth);
+                    }
+                } catch (err) {
+                    console.error('Failed to parse WebSocket message:', err);
+                }
+            };
+
+            ws.current.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                setIsConnected(false);
+            };
+
+            ws.current.onclose = () => {
+                console.log('WebSocket disconnected');
+                setIsConnected(false);
+                setTimeout(connectWebSocket, 3000);
+            };
+        };
+
+        connectWebSocket();
+
+        return () => {
+            if (ws.current) {
+                ws.current.close();
+            }
+        };
+    }, []);
+
+    const toggleExpandContentId = (contentId) => {
+        setExpandedContentIds((prevExpanded) =>
+            prevExpanded.includes(contentId)
+                ? prevExpanded.filter((id) => id !== contentId)
+                : [...prevExpanded, contentId]
+        );
     };
 
     // Group messages by content_id
@@ -66,69 +192,6 @@ const Dashboard = () => {
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm, selectedContentType, itemsPerPage]);
-
-    useEffect(() => {
-        const connectWebSocket = () => {
-            ws.current = new WebSocket('ws://localhost:5001');
-
-            ws.current.onopen = () => {
-                console.log('WebSocket connected');
-                setIsConnected(true);
-            };
-
-            ws.current.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log('WebSocket data received:', data);
-
-                    if (data.type === 'initialMessages') {
-                        setMessages([...data.data]);
-                        setLoading(false);
-                    } else if (data.type === 'newMessage') {
-                        setMessages(prevMessages => [data.data, ...prevMessages]);
-                    }
-                } catch (err) {
-                    console.error('Failed to parse WebSocket message:', err);
-                }
-            };
-
-            ws.current.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                setIsConnected(false);
-            };
-
-            ws.current.onclose = () => {
-                console.log('WebSocket disconnected');
-                setIsConnected(false);
-                setTimeout(connectWebSocket, 3000);
-            };
-        };
-
-        connectWebSocket();
-
-        return () => {
-            if (ws.current) {
-                ws.current.close();
-            }
-        };
-    }, []);
-
-    const toggleExpandContentId = (contentId) => {
-        setExpandedContentIds((prevExpanded) =>
-            prevExpanded.includes(contentId)
-                ? prevExpanded.filter((id) => id !== contentId)
-                : [...prevExpanded, contentId]
-        );
-    };
-    
-    
-    //     // Truncate the contentId and store it in state
-    //     setTruncatedContentIds((prevTruncated) => ({
-    //         ...prevTruncated,
-    //         [contentId]: contentId.includes('.') ? contentId.split('.')[0] : contentId,
-    //     }));
-    // };
-    
 
     return (
         <div className="dashboard-wrapper">
@@ -243,8 +306,7 @@ const Dashboard = () => {
                     className="content-row" 
                     onClick={() => toggleExpandContentId(contentId)}
                  >
-                    {/* <td>{expandedContentIds.includes(contentId) ? (contentId.includes('.') ? contentId.split('.')[0] : contentId) : contentId}</td> */}
-                    <td>{expandedContentIds.includes(contentId) ?  contentId : contentId}</td>
+                    <td>{expandedContentIds.includes(contentId) ? contentId : contentId}</td>
                     <td colSpan="6" className="id-cell">
                         {expandedContentIds.includes(contentId) ? '▼' : '▶'}
                     </td>
@@ -323,6 +385,51 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
+
+                <button onClick={handleAnalyticsClick} className="action-button">
+                        {showAnalytics ? 'Hide Analytics' : 'View Analytics'}
+                    </button>
+
+                    {showAnalytics && (
+                        <div className="analytics-panel">
+                            <div className="analytics-section">
+                                <h3>System Performance</h3>
+                                <div className="metrics-grid">
+                                    <MetricCard title="CPU Usage" value={`${performanceStats.cpuUtilization}%`}/>
+                                    <MetricCard title="Memory Usage" value={`${performanceStats.memoryUsage}%`}/>
+                                    <MetricCard title="System Load" value={performanceStats.currentLoad}/>
+                                    <MetricCard title="Uptime"
+                                                value={`${Math.floor(performanceStats.uptime / 3600)}h ${Math.floor((performanceStats.uptime % 3600) / 60)}m`}/>
+                                </div>
+                            </div>
+
+                            <div className="analytics-section">
+                                <h3>Network Performance</h3>
+                                <div className="metrics-grid">
+                                    <MetricCard title="Data Sent"
+                                                value={`${((performanceStats?.networkStats?.bytesSent || 0) / 1024 / 1024).toFixed(2)} MB`}/>
+                                    <MetricCard title="Data Received"
+                                                value={`${((performanceStats?.networkStats?.bytesReceived || 0) / 1024 / 1024).toFixed(2)} MB`}/>
+                                    <MetricCard title="Active Connections"
+                                                value={performanceStats?.networkStats?.activeConnections || 0}/>
+                                    <MetricCard title="Messages/sec"
+                                                value={(performanceStats?.networkStats?.messageRate || 0).toFixed(2)}/>
+                                </div>
+                            </div>
+
+                            <div className="analytics-section">
+                                <h3>Processing Statistics</h3>
+                                <div className="metrics-grid">
+                                    <MetricCard title="Total Files" value={fileStats.totalFilesProcessed}/>
+                                    <MetricCard title="Success Rate" value={`${systemHealth.successRate.toFixed(1)}%`}/>
+                                    <MetricCard title="Queue Depth" value={systemHealth.queueDepth}/>
+                                    <MetricCard title="Avg Response Time"
+                                                value={`${performanceStats.averageResponseTime.toFixed(0)}ms`}/>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
             </main>
 
             <footer className="dashboard-footer">

@@ -370,5 +370,72 @@ body {
     padding-left: 2rem;
 }
 
+/* MetricCard Styles */
+.metric-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.metric-card h4 {
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.metric-card p {
+    font-size: 2rem;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Stats Section Styles */
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem; /* Increase gap for better spacing */
+    padding: 2rem; /* Adjust padding for overall layout */
+    max-width: 1400px;
+    margin: 2rem auto;
+}
+
+/* Background Color for Cards */
+.stat-card, .metric-card {
+    background-color: white;
+}
+
+/* Typography Enhancements */
+body {
+    font-family: var(--font-family);
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+.dashboard-header {
+    font-family: var(--font-family);
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: #ffffff;
+}
+
+.header-text h1 {
+    font-size: 2rem; /* Increased size for visibility */
+    font-weight: 700;
+}
+
+/* Card Border Radius and Depth */
+.stat-card, .metric-card {
+    border-radius: 12px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+}
 
 
