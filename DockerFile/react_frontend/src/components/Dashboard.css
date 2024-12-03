@@ -212,8 +212,8 @@ body {
 }
 
 .content-type.audio {
-  background: rgba(255, 152, 0, 0.1);
-  color: #ff9800;
+  background: rgba(147, 167, 174, 0.1);
+  color: #00d0ff;
 }
 
 .content-type.status-message {
