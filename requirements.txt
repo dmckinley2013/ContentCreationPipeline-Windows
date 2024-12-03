@@ -16,8 +16,8 @@ python-engineio==4.9.1
 # Database and Data Handling
 dnspython==2.6.1
 neo4j>=5.14.0
-#pymongo-bson==4.9.1  # Added this specifically for BSON support
-bson>=0.5.10
+
+
 
 # Machine Learning and Processing
 spacy==3.5.4

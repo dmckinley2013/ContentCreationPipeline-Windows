@@ -11,7 +11,7 @@ commands = [
     ("python parse.py", os.path.join(base_dir, "Parser_Module")),
     ("node server.js", os.path.join(base_dir, "WebSocket_Backend")),
     ("python websocket_server.py", os.path.join(base_dir, "WebSocket_Backend")),
-    ("export NODE_OPTIONS=--openssl-legacy-provider && npm start", os.path.join(base_dir, "react_frontend")),
+    ("npm start", os.path.join(base_dir, "react_frontend")),
     ("python metabackendmac.py", os.path.join(base_dir, "Metadata_Module")),
     ("uvicorn file_uploader_backend:app --reload", os.path.join(base_dir, "Main_Server"))
 ]
@@ -22,13 +22,15 @@ processes = []
 def run_command(cmd, work_dir, wait_time=0):
     """Runs a command in a specific directory and optionally waits."""
     print(f"\nStarting: {cmd} in {work_dir}")
-    process = subprocess.Popen(cmd, shell=True, cwd=work_dir, executable='/bin/bash')  # Ensure it runs in a bash shell
+    # Use shell=True for Windows; no executable needed
+    process = subprocess.Popen(cmd, shell=True, cwd=work_dir)
     processes.append(process)
     
     # Add a delay if specified
     if wait_time > 0:
         print(f"Waiting for {wait_time} seconds...")
         time.sleep(wait_time)
+    
 
 def shutdown_all():
     """Gracefully shuts down all running processes and Docker containers."""
@@ -59,7 +61,7 @@ try:
     run_command("python parse.py", os.path.join(base_dir, "Parser_Module"))
     run_command("node server.js", os.path.join(base_dir, "WebSocket_Backend"))
     run_command("python websocket_server.py", os.path.join(base_dir, "WebSocket_Backend"))
-    run_command("export NODE_OPTIONS=--openssl-legacy-provider && npm start", os.path.join(base_dir, "react_frontend"))
+    run_command("npm start", os.path.join(base_dir, "react_frontend"))
     run_command("python metabackendmac.py", os.path.join(base_dir, "Metadata_Module"))
     run_command("uvicorn file_uploader_backend:app --reload", os.path.join(base_dir, "Main_Server"))
 

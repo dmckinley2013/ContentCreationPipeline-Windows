@@ -1,5 +1,5 @@
 from neo4j import GraphDatabase
-from statusfeed import statusFeed
+from statusFeed import statusFeed
 
 
 URI = "neo4j://localhost:7687"
