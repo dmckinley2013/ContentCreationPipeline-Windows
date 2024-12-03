@@ -44,4 +44,5 @@ custom_ner_modelREL/
 **store_**
 
 *ollama
-huggingface_cache/
+
+*myenv/
