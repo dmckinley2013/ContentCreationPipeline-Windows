@@ -1,193 +1,95 @@
-# Installation Guide
+**Software Downloads** Before
+-Make sure you have python 3.12 or less 
+-Install neo4j Desktop - https://neo4j.com/download/
+-Install Docker Desktop
+-Install MongoDB community eddition (keep the activation key) [Mongo Download](https://www.mongodb.com/docs/manual/administration/install-community/)
+-Install MongoDb Compass [MongoDB Compass](https://www.mongodb.com/products/tools/compass)
+- Install ollama if you are on mac and download the model llama2:7b
 
-## Prerequisites
-- Python 3.10 or later
-- pip (Python package installer)
-- Node.js and npm (for React frontend)
-- Docker and Docker Compose
-- MongoDB
 
-## Setup Instructions
 
-### 1. Create a Virtual Environment
+**Neo4j Desktop Setup**
+- Skip Registration if it prompts you to.
+-[ Watch Video](https://youtu.be/c_hldeLPN0g) 
+-username:neo4j
+-password: 12345678
 
-This keeps your project dependencies isolated from other Python projects.
 
-Windows:
-```bash
-# Create virtual environment
-python -m venv dashboard_env
+**MongoDB Set Up**
+- Start MongoDB service
+    - Mac:  mongod --dbpath ~/mongodb-data/db
+    - Windows: if custom: mongod --dbpath "C:\path\to\your\mongodb-data\db"
+        - if Default path: mongod --dbpath "C:\data\db"
+-Open MongoDB Compass and click new connection
+![image](https://hackmd.io/_uploads/HJf1-6jXyx.png)
+and fill out the form as shown bellow.
+mongodb://localhost:27017/dashboard_db
+![image](https://hackmd.io/_uploads/r1F6yToQyg.png)
 
-# Activate virtual environment
-dashboard_env\Scripts\activate
-```
+**Docker Desktop Setup**
+- Run Docker Desktop
 
-Mac/Linux:
-```bash
-# Create virtual environment
-python -m venv dashboard_env
+## Running the Docker Containers
 
-# Activate virtual environment
-source dashboard_env/bin/activate
-```
+Ensure **Docker Desktop** is running if you are on Windows.
 
-You'll know it's activated when you see `(dashboard_env)` at the start of your terminal line.
+1. **Start the Docker containers**:
 
-### 2. Install Python Dependencies
-
-With your virtual environment activated:
-```bash
-# Install all required packages
-pip install -r requirements.txt
-
-# Install spaCy language model
-python -m spacy download en_core_web_lg
-```
-
-### 3. Install Node.js Dependencies
-
-For the React frontend:
-```bash
-cd react_frontend
-npm install
-cd ..
-```
-
-For the WebSocket backend:
-```bash
-cd WebSocket_Backend
-npm install
-cd ..
-```
-
-### 4. Verify Installation
-
-Test that key packages are installed:
-```bash
-python -c "import pika; import pymongo; import websockets; import spacy; print('All core packages installed successfully!')"
-```
-
-### 5. Running the Application
-
-Use the provided startup script:
-```bash
-python run_all.py
-```
-
-This will:
-1. Start Docker containers
-2. Launch the Parser Module
-3. Start the WebSocket backend
-4. Start the React frontend
-
-Important Note: If you see the program start compiling before the Docker containers are fully initialized (before RabbitMQ is ready), stop the program (Ctrl+C) and run it again. Sometimes the 45-second initialization wait time isn't enough for Docker containers to fully start. This is being updated to use dynamic checking instead of a fixed wait time.
-
-### 6. Running Tests with Main Server
-
-After your application is running (Docker containers initialized and all services started), you can run tests using the main server:
-
-```bash
-# Navigate to the Main Server directory
-cd BuildingTheDashboardModule/DockerFile/Main_Server
-
-# Run the main server
-python main_server.py
-```
-
-**Important Notes for Testing:**
-1. Only run `main_server.py` after all other services are fully initialized and running
-2. Make sure:
-   - Docker containers are fully initialized (RabbitMQ is ready)
-   - Parser Module is running
-   - WebSocket servers are running
-   - React frontend is running
-3. You should see the dashboard update in real-time as tests are processed
-
-If you encounter connection errors:
-1. Stop main_server.py (`Ctrl+C`)
-2. Verify all other services are running properly
-3. Try running main_server.py again
-
-## Troubleshooting Common Issues
-
-### Python/pip Issues
-
-1. **"Package not found" errors:**
+    - For Windows or Gpu
    ```bash
-   # Try updating pip
-   python -m pip install --upgrade pip
-   
-   # Then reinstall requirements
+   docker-compose --profile gpu up
+   ```
+   - For Mac or no Gpu
+    ```bash
+   docker-compose --profile non-gpu up
+   ```
+## Setting up the environment
+
+1. **Create a virtual environment** (in the main project directory):
+   ```bash
+   python -m venv env
+   ```
+   for Mac
+   ```bash
+   python3 -m venv env
+   ```
+
+2. **Activate the virtual environment**:
+   - On **Windows**:
+     ```bash
+     env\Scripts\activate
+     ```
+   - On **Mac/Linux**:
+     ```bash
+     source env/bin/activate
+     ```
+
+3. **Install dependencies** in the local environment:
+   ```bash
    pip install -r requirements.txt
    ```
-
-2. **Visual C++ Build Tools error (Windows):**
-   - Download and install Build Tools from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
-   - Restart your terminal and try installation again
-
-3. **spaCy model download fails:**
-   ```bash
-   # Alternative download method
-   pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.5.0/en_core_web_lg-3.5.0-py3-none-any.whl
-   ```
-
-### Docker Issues
-
-1. **Docker containers won't start:**
-   ```bash
-   # Remove existing containers
-   docker-compose down
    
-   # Clean up Docker system
-   docker system prune
-   
-   # Try starting again
-   docker-compose up --build
-   ```
 
-2. **Port conflicts:**
-   - Check if ports are in use: `netstat -ano | findstr PORT_NUMBER`
-   - Stop conflicting services or modify port numbers in docker-compose.yml
+## Running the Python Scripts
 
-### Node.js/React Issues
 
-1. **npm install fails:**
+
+1. **Start All services - Frontend and Backend**:
+   Navigate to the directory where `run_all_macunix.py` or `run_all.py`  is located and run:
    ```bash
-   # Clear npm cache
-   npm cache clean --force
-   
-   # Try installation again
-   npm install
+   python <filename.py>
    ```
 
-2. **Module not found errors:**
+
+2. **Open the Document Module** (open a new terminal):
+-Before running if you are on a mac change line 28 to 
+```from image_moduleMac import ImageClassifier```
+on windows it should be 
+```from image_module import ImageClassifier```
+
+The reason for this is that we could not get Microsoft Resnet 50 running on Mac
+
+   Navigate to the directory where `doc_module.py` is located and run:
    ```bash
-   # Remove node_modules and try fresh install
-   rm -rf node_modules
-   rm package-lock.json
-   npm install
+   python doc_module.py
    ```
-
-## Virtual Environment Tips
-
-- To deactivate the virtual environment when you're done:
-  ```bash
-  deactivate
-  ```
-
-- If you install new packages, update requirements.txt:
-  ```bash
-  pip freeze > requirements.txt
-  ```
-
-- To completely remove the virtual environment:
-  ```bash
-  # Windows
-  rmdir /s /q dashboard_env
-  
-  # Mac/Linux
-  rm -rf dashboard_env
-  ```
-
-
-

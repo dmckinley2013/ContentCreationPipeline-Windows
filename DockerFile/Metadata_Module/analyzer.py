@@ -5,60 +5,17 @@ from dbOperationsLocal import nodeBuilder
 import copy
 import os
 
-# Register a custom attribute for inferred relations
+# Register a custom attribute for inferred relations # NOT BEING USED BUT COULD BE A METHOD THAT CAN BE USED WITH SPACY FOR RELATIONSHIP
 if not Doc.has_extension("relations"):
     Doc.set_extension("relations", default=[])
 
 
 # Define the relationship extraction component
-class TypeBasedRelationExtractor:
-    def __call__(self, doc):
-        entities = {
-            "digitalTwinAircraft": [],
-            "digitalTwinEngine": [],
-            "digitalTwinElectricGenerator": [],
-            "digitalTwinGround": [],
-            "digitalTwinMarine": [],
-        }
-        for ent in doc.ents:
-            if ent.label_ in entities:
-                entities[ent.label_].append(ent)
-
-        relations = []
-        for aircraft in entities["digitalTwinAircraft"]:
-            for engine in entities["digitalTwinEngine"]:
-                # relations.append({"relation": "has_engine", "head": aircraft.text, "tail": f" {engine.text}"})
-                relations.append({"relation": "engine"})
-        for ground in entities["digitalTwinGround"]:
-            for engine in entities["digitalTwinEngine"]:
-                # relations.append({"relation": "has_engine", "head": ground.text, "tail": f" {engine.text}"})
-                relations.append({"relation": "Engine"})
-        for marine in entities["digitalTwinMarine"]:
-            for engine in entities["digitalTwinEngine"]:
-                # relations.append({"relation": "has_engine", "head": ground.text, "tail": f" {engine.text}"})
-                relations.append({"relation": "Engine"})
-        for m in entities["digitalTwinMarine"]:
-            for engine in entities["digitalTwinElectricGenerator"]:
-                # relations.append({"relation": "has_engine", "head": ground.text, "tail": f" {engine.text}"})
-                relations.append({"relation": "ElectricGenerator"})
-
-        # print("Relations:", relations)
-
-        doc._.relations = relations
-        return doc
-
-
-# Register the custom component
-@spacy.language.Language.factory("type_based_relation_extractor")
-def create_type_based_relation_extractor(nlp, name):
-    return TypeBasedRelationExtractor()
-
 
 # Load the trained NER model and add the relationship extractor
 current_dir = os.path.dirname(__file__)
 model_path = os.path.join(current_dir, "custom_ner_modelREL")
 nlp = spacy.load(model_path) # change to your custom directory
-nlp.add_pipe("type_based_relation_extractor", last=True)
 
 
 class entityRelationExtraction:
@@ -95,6 +52,7 @@ class entityRelationExtraction:
                 digitalTwinType = ent.label_[
                     11:
                 ]  # after the 11th character is Aircraft
+                
                 currentNode = [ent.text, nodeType, digitalTwinType]
 
                 # Add current node to nodes list
@@ -134,7 +92,7 @@ class entityRelationExtraction:
         # Remove duplicate nodes
         nodesUnique = remove_duplicate_nodes(nodes)
         print("Unique Nodes:")
-        # Insert learnerNode and learnerRelation at the beginning of the nodes list
+       
         main_topic_node_copy = find_main_topic_node(nodesUnique, main_topic)
 
         prompt = "".join(sentences)
@@ -147,7 +105,8 @@ class entityRelationExtraction:
         main_topic_node_copy.append(missionProfile)
         print("MAIN HERE")
         print(main_topic_node_copy)
-
+    # Insert learnerNode, mainNode with mission profile, learnerRelation and contentID at the beginning of the nodes list,
+   
         nodesUnique.insert(0, main_topic_node_copy)
         nodesUnique.insert(0, learnerRelation)
         nodesUnique.insert(0, learnerNode)
