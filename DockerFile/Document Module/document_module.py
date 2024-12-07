@@ -171,7 +171,7 @@ def publish_to_rabbitmq(routing_key, message):
                 "ID": "ObjectID",  
                 "DocumentId": "ObjectID",
                 "DocumentType": "String",
-                "file_name": "String",
+                "FileName": "String",
                 "Status": "Processed Successfully",
                 "Message": "Message has been Processed and sent to the Store Queue"
             }
@@ -246,18 +246,18 @@ def on_message_received(ch, method, properties, body):
                 "ID": "ObjectID",  
                 "DocumentId": "ObjectID",
                 "DocumentType": "String",
-                "file_name": "String",
+                "FileName": "String",
                 "Payload": "Binary"
             }
         '''
 
         #save the payload to a file
-        with open(FilePath + "/" + body['file_name'], 'wb') as f:
+        with open(FilePath + "/" + body['FileName'], 'wb') as f:
             f.write(body['Payload'])
 
         #open the file and convert it to text
-        Meta_file, Text_Summerizer, Keyword = openFile(FilePath + "/" + body['file_name'])
-        Image_file = IteratePDF(FilePath + "/" + body['file_name'])
+        Meta_file, Text_Summerizer, Keyword = openFile(FilePath + "/" + body['FileName'])
+        Image_file = IteratePDF(FilePath + "/" + body['FileName'])
 
 
         if Image_file > 0:
@@ -270,7 +270,7 @@ def on_message_received(ch, method, properties, body):
                         "ID": body['ID'],
                         "PictureID": body['DocumentId'],
                         "PictureType": ext,  # Set the value to the file extension
-                        "file_name": file,
+                        "FileName": file,
                         "Payload": image_payload
                     }
                     image['PictureID'] = compute_unique_id(image)
@@ -298,7 +298,7 @@ def on_message_received(ch, method, properties, body):
                 "ID": "ObjectID",  
                 "DocumentId": "ObjectID",
                 "DocumentType": "String",
-                "file_name": "String",
+                "FileName": "String",
                 "Payload": "Binary"
                 "Meta": "Binary",
                 "Summary": "Binary",
@@ -312,7 +312,7 @@ def on_message_received(ch, method, properties, body):
         #remove the files
         remove_files()
         #remove the file
-        os.remove(FilePath + "/" + body['file_name'])
+        os.remove(FilePath + "/" + body['FileName'])
     except Exception as e:
         print(e)
         #send the error message to the dashboard
