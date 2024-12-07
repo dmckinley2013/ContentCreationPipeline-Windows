@@ -274,21 +274,23 @@ class FileUploaderGUI:
         if job["NumberOfDocuments"] > 0:
             for document in job["Documents"]:
                 document["ID"] = job["ID"]
-                document["content_id"] = job["ID"]
+                document["content_id"] = self.compute_unique_id(document)
                 document["DocumentId"] = self.compute_unique_id(document)
                 
         if job["NumberOfImages"] > 0:
             for image in job["Images"]:
                 image["ID"] = job["ID"]
-                image["content_id"] = job["ID"]
+                image["content_id"] = self.compute_unique_id(image)
                 image['PictureID'] = self.compute_unique_id(image)
         if job["NumberOfAudio"] > 0:
             for audio in job["Audio"]:
-                audio["content_id"] = job["ID"]
+                audio['ID'] = job['ID']
+                audio["content_id"] = self.compute_unique_id(audio)
                 audio["AudioID"] = self.compute_unique_id(audio)
         if job["NumberOfVideo"] > 0:
             for video in job["Video"]:
                 video["ID"] = job["ID"]
+                video["content_id"] = self.compute_unique_id(video)
                 video["VideoID"] = self.compute_unique_id(video)
         return job
 
