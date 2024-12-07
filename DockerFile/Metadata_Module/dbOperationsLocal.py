@@ -7,6 +7,7 @@ AUTH = ("neo4j", "12345678")
 
 
 def getAllNodes():
+    driver = GraphDatabase.driver(URI, auth=AUTH)
     with driver.session() as session:
         query = """MATCH (n) RETURN n LIMIT 100"""
         result = session.run(query)
@@ -30,14 +31,10 @@ def nodeTraceback(learnerObject, contentID):
     with driver.session() as session:
         nodeToLookFor = learnerObject
 
+        # Query to trace `learnerObject_of` and the next relationship in one direction
         query = """
-        MATCH (node {name: $nodeToLookFor})-[r]-(connectedNode)
-        WHERE NOT (type(r) IN ['has_Image', 'Image_of'])
-          AND (
-            NOT (type(r) IN ['learnerObject_of', 'has_learnerObject']) 
-            OR $nodeToLookFor IN [node.name, connectedNode.name]
-          )
-        RETURN node, r, connectedNode
+        MATCH path = (startNode {name: $nodeToLookFor})-[:learnerObject_of]->(intermediateNode)-[nextRel]->(connectedNode)
+        RETURN startNode, relationships(path) as rels, nodes(path) as nodes
         """
         try:
             result = session.run(query, {"nodeToLookFor": nodeToLookFor})
@@ -54,26 +51,25 @@ def nodeTraceback(learnerObject, contentID):
 
         for record in result:
             found_any = True
-            node = record["node"]
-            r = record["r"]
-            connectedNode = record["connectedNode"]
+            relationships = record["rels"]
+            path_nodes = record["nodes"]
 
-            relationshipType = r.type
-            fromNodeName = node["name"]
-            toNodeName = connectedNode["name"]
+            # Extract relationships and nodes
+            for i in range(len(relationships)):
+                fromNodeName = path_nodes[i]["name"]
+                toNodeName = path_nodes[i + 1]["name"]
+                relationshipType = relationships[i].type
 
-            # Normalize relationships for deduplication
-            relationship_key = tuple(sorted([fromNodeName, toNodeName]))
-            relationship_string = (
-                f"{fromNodeName} - [{relationshipType}] -> {toNodeName}"
-                if fromNodeName == nodeToLookFor
-                else f"{toNodeName} <- [{relationshipType}] - {fromNodeName}"
-            )
+                # Normalize relationships for deduplication
+                relationship_key = tuple(sorted([fromNodeName, toNodeName]))
+                relationship_string = (
+                    f"{fromNodeName} - [{relationshipType}] -> {toNodeName}"
+                )
 
-            if (relationship_key, relationshipType) not in printed_relationships:
-                print(relationship_string)
-                printed_relationships.add((relationship_key, relationshipType))
-                relationMessage.append(relationship_string)
+                if (relationship_key, relationshipType) not in printed_relationships:
+                    print(relationship_string)
+                    printed_relationships.add((relationship_key, relationshipType))
+                    relationMessage.append(relationship_string)
 
         relationMessageString = ", ".join(relationMessage)
         print("STATUS FEED CALLED HERE")
@@ -86,6 +82,7 @@ def nodeTraceback(learnerObject, contentID):
 
         if not found_any:
             logging.info("No node found with the specified name.")
+
 
 def nodeTracebackManual():
     driver = GraphDatabase.driver(URI, auth=AUTH)
@@ -168,41 +165,6 @@ def nodeTracebackManual():
         print(relationMessage)
 
 
-
-    with driver.session() as session:
-        print("Executing query to find node with name ' GE414'...")
-        nodeToLookFor = input(f"Enter the name of the node to update: ")
-        # Query to find the node
-        query = """MATCH (tNode:digitalTwin {name: $nodeToLookFor}) RETURN tNode"""
-        result = session.run(query, {"nodeToLookFor": nodeToLookFor})
-
-        found_any = False
-
-        for record in result:
-            tNode = record["tNode"]
-            print("Node found:", tNode)  # Debugging: Print the node details
-            found_any = True
-
-            # Ask user for the new name
-            newName = input(f"Enter the new name for the node: ")
-
-            # Update query using the internal ID of the node to ensure you're updating the correct node
-            queryUpdate = """
-            MATCH (tNode) 
-            SET tNode.name = $newName
-            RETURN tNode
-            """
-
-            # Run the update query with the node ID and new name as parameters
-            resultNew = session.run(queryUpdate, {"newName": newName})
-
-            # Print the updated node
-            for updatedRecord in resultNew:
-                updatedNode = updatedRecord["tNode"]
-                print("Updated Node:", updatedNode)
-
-        if not found_any:
-            print("No nodes were found with the name ' GE414'.")
 
 
 # "node1+DT,relation,node2+LO"
@@ -334,6 +296,8 @@ class nodeBuilder:
         # updateNodes()
         # getAllNodes()
         # nodesArray = [nodes.split(",") for nodes in store_relationship()]
+        print("Passed Package")
+        print(package)
 
         contentID = package[0]
         del package[0]
@@ -377,27 +341,47 @@ class nodeBuilder:
 
 
 if __name__ == "__main__":
-    package = [
-        ["Tank.pdf", "learnerObject", "pdf"],
-        ["learnerObject"],
-        ["Titan65 engine", "digitalTwin", "Engine"],
-        ["Titan65 engine", "digitalTwin", "Engine"],
-        ["engine"],
-        ["M551 Sheridan", "digitalTwin", "Ground"],
-        ["In addition", "digitalTwin", "Aircraft"],
-    ]
-
+    package = ['378c2714e54e3ffb7fd98c9988e7d95ef8137bfdf0d9a99d229e005291e57448', 
+               ['USSConstitutionRx900Steam.pdf', 'learnerObject', 'pdf'], 
+               ['learnerObject'], 
+               ['USS Constitution', 'digitalTwin', 'Marine', 'The USS Constitution is a historical United States Navy frigate that was launched in 1797 and is now a museum ship in Boston, Massachusetts. The USS Constitution serves as a symbol of American independence and naval power, and it continues to be an important cultural and historical artifact.'], 
+               ['Fuel system', 'digitalTwin', 'Aircraft'], 
+               ['USS Constitution', 'digitalTwin', 'Marine'], 
+               ['engine'], 
+               ['RX900 turbines', 'digitalTwin', 'Engine']]
     
+    package1 = ['a0642259cd4014ae092b14ed65e4258352ca6cbc877b7b86a7cbccb9a00661e7', 
+                ['GE414 Diff Sentence Structure.pdf', 'learnerObject', 'pdf'], 
+                ['learnerObject'], 
+                ['GE414 engine', 'digitalTwin', 'Engine', 'The GE414 is a high-performance engine developed by General Electric (GE) for use in aircraft. It is a two-spool turbofan engine that produces 14,000 pounds of thrust and is known for its reliability and efficiency.'], 
+                ['GE414 engine', 'digitalTwin', 'Engine'],
+                ['engine'], 
+                ['F18 aircraft', 'digitalTwin', 'Aircraft'], 
+                ['Fuel system', 'digitalTwin', 'Aircraft'], 
+                ['TCarbonX', 'digitalTwin', 'Engine'], 
+                ['GE414 require', 'digitalTwin', 'Engine']]
+    
+    package2= ['488b74ced1f1bc34c8a339668ff8cb87385c94fb5807d7e2f5c58d869a57ad4b', 
+               ['F18GeEngineWithPic.pdf', 'learnerObject', 'pdf'], 
+               ['learnerObject'], 
+               ['GE414 engine', 'digitalTwin', 'Engine', 'The GE414 is a high-speed computing engine developed by General Electric (GE) for use in various applications, including weather forecasting, scientific simulations, and data analytics. The GE414 engine offers enhanced performance and scalability compared to its predecessor, the GE350, and is designed to support complex workloads and large datasets with ease.'], 
+               ['GE414 engine', 'digitalTwin', 'Engine'], 
+               ['engine'], 
+               ['F18 aircraft', 'digitalTwin', 'Aircraft'], 
+               ['TCarbonX', 'digitalTwin', 'Engine']]
     # nodeBuilder.packageParser(package)
-    imagePackage = [
-        "Test Image 3",
-        "learnerObject",
-        "Image",
-        "Location_path",
-        "22",
-        "PredictedClass",
-    ]
-    nodeBuilder.imagePackageParser(
-        imagePackage, "1f8f41bd0ea9214b93c834cc4e28209191a2964101fdc84c823b9b9191b5ead6"
-    )
+    nodeTracebackManual()
+    # getAllNodes()
+    # nodeBuilder.packageParser(package)
+    # imagePackage = [
+    #     "Test Image 3",
+    #     "learnerObject",
+    #     "Image",
+    #     "Location_path",
+    #     "22",
+    #     "PredictedClass",
+    # ]
+    # nodeBuilder.imagePackageParser(
+    #     imagePackage, "1f8f41bd0ea9214b93c834cc4e28209191a2964101fdc84c823b9b9191b5ead6"
+    # )
 

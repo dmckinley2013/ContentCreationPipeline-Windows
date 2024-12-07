@@ -9,7 +9,7 @@ import pika
 import logging
 from bson import decode
 from dbOperationsLocal import nodeBuilder
-from statusfeed import statusFeed
+from statusFeed import statusFeed
 class ImageClassifier:
     def __init__(self):
         # Set up logging
