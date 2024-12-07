@@ -1,18 +1,18 @@
 **Software Downloads** Before
--Make sure you have python 3.12 or less 
--Install neo4j Desktop - https://neo4j.com/download/
--Install Docker Desktop
--Install MongoDB community eddition (keep the activation key) [Mongo Download](https://www.mongodb.com/docs/manual/administration/install-community/)
--Install MongoDb Compass [MongoDB Compass](https://www.mongodb.com/products/tools/compass)
-- Install ollama if you are on mac and download the model llama2:7b
+* Make sure you have python 3.12 or less 
+* Install neo4j Desktop - https://neo4j.com/download/
+* Install Docker Desktop
+* Install MongoDB community eddition (keep the activation key) [Mongo Download](https://www.mongodb.com/docs/manual/administration/install-community/)
+* Install MongoDb Compass [MongoDB Compass](https://www.mongodb.com/products/tools/compass)
+* Install ollama if you are on mac and download the model llama2:7b
 
 
 
 **Neo4j Desktop Setup**
-- Skip Registration if it prompts you to.
--[ Watch Video](https://youtu.be/c_hldeLPN0g) 
--username:neo4j
--password: 12345678
+* - Skip Registration if it prompts you to.
+* [ Watch Video](https://youtu.be/c_hldeLPN0g) 
+* username:neo4j
+* password: 12345678
 
 
 **MongoDB Set Up**
