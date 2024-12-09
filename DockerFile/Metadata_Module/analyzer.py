@@ -20,8 +20,6 @@ nlp = spacy.load(model_path) # change to your custom directory
 
 class entityRelationExtraction:
     def analyze(sentences, file_name, contentID):
-        print("analyze() called from:")
-        traceback.print_stack()  # This will show the call stack leading to analyze
         print(sentences)
         nodes = []
 
