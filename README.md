@@ -64,10 +64,16 @@ Ensure **Docker Desktop** is running if you are on Windows.
      source env/bin/activate
      ```
 
-3. **Install dependencies** in the local environment:
+3. **Install dependencies** in the environment:
    ```bash
    pip install -r requirements.txt
    ```
+
+4. **Create/Train the Spacy Model** : Navigate to the Metadata_Module Folder
+   ```bash
+   python3 SpacyTraining.py
+   ```
+   This will create the folder containing the custom spacy Model. The Analyzer will use this model called "custom_ner_modelREL" or whatever the output file name is given in SpacyTraining.py
    
 
 ## Running the Python Scripts
